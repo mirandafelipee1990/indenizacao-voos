@@ -68,12 +68,18 @@ st.markdown("""
         text-shadow: 0 0 8px rgba(0,0,0,0.7);
         user-select: none;
     }
+    
+    /* Caixa de destaque com contraste corrigido e legibilidade garantida */
     .highlight-box {
         border-left: 5px solid #2563eb;
         background-color: #f0f2f6;
         padding: 20px;
         border-radius: 8px;
         margin-bottom: 20px;
+        color: #1e293b !important;
+    }
+    .highlight-box h3, .highlight-box p, .highlight-box span {
+        color: #1e293b !important;
     }
     
     /* Botão Flutuante Apenas com o Ícone do WhatsApp */
@@ -130,6 +136,36 @@ LINKS_TJ = {
     "SP": "https://www.tjsp.jus.br", "SE": "https://www.tjse.jus.br", "TO": "https://www.tjto.jus.br"
 }
 ESTADOS = list(LINKS_TJ.keys())
+
+ESTADOS_TEXTO = {
+    "AC": "DO ESTADO DO ACRE",
+    "AL": "DO ESTADO DE ALAGOAS",
+    "AP": "DO ESTADO DO AMAPÁ",
+    "AM": "DO ESTADO DO AMAZONAS",
+    "BA": "DO ESTADO DA BAHIA",
+    "CE": "DO ESTADO DO CEARÁ",
+    "DF": "DO DISTRITO FEDERAL",
+    "ES": "DO ESTADO DO ESPÍRITO SANTO",
+    "GO": "DO ESTADO DE GOIÁS",
+    "MA": "DO ESTADO DO MARANHÃO",
+    "MT": "DO ESTADO DE MATO GROSSO",
+    "MS": "DO ESTADO DE MATO GROSSO DO SUL",
+    "MG": "DO ESTADO DE MINAS GERAIS",
+    "PA": "DO ESTADO DO PARÁ",
+    "PB": "DO ESTADO DA PARAÍBA",
+    "PR": "DO ESTADO DO PARANÁ",
+    "PE": "DO ESTADO DE PERNAMBUCO",
+    "PI": "DO ESTADO DO PIAUÍ",
+    "RJ": "DO ESTADO DO RIO DE JANEIRO",
+    "RN": "DO ESTADO DO RIO GRANDE DO NORTE",
+    "RS": "DO ESTADO DO RIO GRANDE DO SUL",
+    "RO": "DO ESTADO DE RONDÔNIA",
+    "RR": "DO ESTADO DE RORAIMA",
+    "SC": "DO ESTADO DE SANTA CATARINA",
+    "SP": "DO ESTADO DE SÃO PAULO",
+    "SE": "DO ESTADO DE SERGIPE",
+    "TO": "DO ESTADO DO TOCANTINS"
+}
 
 CIAS_MAPPING = {
     "LATAM": "LATAM Airlines Brasil",
@@ -211,8 +247,10 @@ def gerar_pdf(uf, nome, cpf, endereco, cia_completa, pnr, trecho, data_voo_br, t
     def txt(texto):
         return str(texto).encode('latin-1', 'replace').decode('latin-1')
 
+    uf_texto = ESTADOS_TEXTO.get(uf, f"DO ESTADO DE {uf}")
+
     pdf.set_font("Arial", 'B', 12)
-    pdf.multi_cell(0, 6, txt(f"EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DO JUIZADO ESPECIAL CÍVEL DA COMARCA DO ESTADO DO(A) {uf}"), align="C")
+    pdf.multi_cell(0, 6, txt(f"EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DO JUIZADO ESPECIAL CÍVEL DA COMARCA {uf_texto}"), align="C")
     pdf.ln(8)
     
     pdf.set_font("Arial", '', 10)
@@ -302,14 +340,22 @@ def ir_para_etapa(destino):
     st.rerun()
 
 if st.session_state.etapa == "loading":
-    st.title("Processando...")
-    status = st.empty()
-    barra = st.progress(0)
-    mensagens = ["Analisando elegibilidade do voo...", "Verificando parâmetros regulatórios...", "Estruturando documentação jurídica..."]
-    for i in range(3):
-        status.write(mensagens[i])
-        barra.progress((i + 1) * 33)
-        time.sleep(0.4)
+    st.markdown("""
+        <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: sans-serif;">
+            <div style="background: white; color: #1e293b; padding: 35px 45px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); text-align: center; max-width: 400px; width: 90%;">
+                <div style="border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 0 auto 20px auto;"></div>
+                <h3 style="margin: 0 0 10px 0; font-size: 19px; font-weight: 700; color: #1e293b;">Processando dados...</h3>
+                <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.4;">Analisando parâmetros regulatórios e estruturando documento jurídico.</p>
+            </div>
+        </div>
+        <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    time.sleep(1.2)
     st.session_state.etapa = st.session_state.target_etapa
     st.rerun()
 
@@ -434,12 +480,11 @@ elif st.session_state.etapa == 2:
     with col_b2:
         if st.button("Continuar para Pré-visualização ➡️", type="primary", use_container_width=True):
             origem_valida = origem.strip() if origem_sel == "Outro / Não listado" else origem
-            origem_valida = origem_valida if origem_sel != "Outro / Não listado" else origem
             destino_valida = destino.strip() if destino_sel == "Outro / Não listado" else destino
             
-            if not endereco or len(pnr) != 6 or not num_voo or not origem or not destino:
+            if not endereco or len(pnr) != 6 or not num_voo or not origem_valida or not destino_valida:
                 st.error("Preencha todos os campos obrigatórios, incluindo os nomes dos aeroportos personalizados se selecionados.")
-            elif origem == destino:
+            elif origem_valida == destino_valida:
                 st.error("A origem e o destino não podem ser iguais.")
             elif not prazo_valido:
                 st.error(f"❌ Não é possível prosseguir. O prazo limite legal de {limite_texto} para requerer esta indenização já expirou.")
@@ -452,9 +497,9 @@ elif st.session_state.etapa == 2:
                 st.session_state.destino_sel = destino_sel
                 st.session_state.origem_custom = origem if origem_sel == "Outro / Não listado" else ""
                 st.session_state.destino_custom = destino if destino_sel == "Outro / Não listado" else ""
-                st.session_state.origem = origem
-                st.session_state.destino = destino
-                st.session_state.trecho = f"{origem} até {destino}"
+                st.session_state.origem = origem_valida
+                st.session_state.destino = destino_valida
+                st.session_state.trecho = f"{origem_valida} até {destino_valida}"
                 st.session_state.data_voo_br = data_voo.strftime("%d/%m/%Y")
                 st.session_state.tipo_voo = tipo_voo
                 st.session_state.tipo_conexao = tipo_conexao
@@ -468,10 +513,12 @@ elif st.session_state.etapa == 3:
     st.title("Pré-visualização da sua Petição")
     st.info("Confira os dados estruturados abaixo. A fundamentação legal completa será liberada na finalização.")
     
+    uf_extenso_preview = ESTADOS_TEXTO.get(st.session_state.uf, f"DO ESTADO DE {st.session_state.uf}")
+
     st.markdown(f"""
     <div class="doc-container">
         <div class="doc-header">
-            EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DO JUIZADO ESPECIAL CÍVEL DA COMARCA DO ESTADO DO(A) {st.session_state.uf}
+            EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DO JUIZADO ESPECIAL CÍVEL DA COMARCA {uf_extenso_preview}
         </div>
         <p><b>REQUERENTE:</b> {st.session_state.nome.upper()}, portador(a) do CPF nº {st.session_state.cpf}, residente e domiciliado(a) em {st.session_state.endereco}. E-mail: {st.session_state.email}.</p>
         <p align="center"><b>AÇÃO DE INDENIZAÇÃO POR DANOS MORAIS E MATERIAIS</b></p>
@@ -485,18 +532,13 @@ elif st.session_state.etapa == 3:
     </div>
     """, unsafe_allow_html=True)
     
-    aceitou_termos = st.checkbox("Confirmo que revisei meus dados e que as informações do voo estão corretas.")
-    
     col_b1, col_b2 = st.columns(2)
     with col_b1:
         if st.button("⬅️ Voltar para Edição", use_container_width=True):
             ir_para_etapa(2)
     with col_b2:
         if st.button("Continuar para Finalização", type="primary", use_container_width=True):
-            if aceitou_termos:
-                ir_para_etapa(4)
-            else:
-                st.warning("Você precisa confirmar a exatidão dos dados para avançar.")
+            ir_para_etapa(4)
 
 # --- ETAPA 4: PAGAMENTO E ENTREGA ---
 elif st.session_state.etapa == 4:
