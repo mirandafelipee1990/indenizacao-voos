@@ -20,15 +20,15 @@ st.markdown("""
         max-width: 750px;
     }
     
-    /* Força os botões primários do Streamlit para Azul Corporativo */
+    /* Força os botões primários do Streamlit para o Verde Corporativo de Conversão (#16a34a) */
     div.stButton > button[kind="primary"] {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
+        background-color: #16a34a !important;
+        border-color: #16a34a !important;
         color: white !important;
     }
     div.stButton > button[kind="primary"]:hover {
-        background-color: #1d4ed8 !important;
-        border-color: #1d4ed8 !important;
+        background-color: #15803d !important;
+        border-color: #15803d !important;
     }
 
     /* Animação de pulso mais evidente */
@@ -71,7 +71,7 @@ st.markdown("""
     
     /* Caixa de destaque com contraste corrigido e legibilidade garantida */
     .highlight-box {
-        border-left: 5px solid #2563eb;
+        border-left: 5px solid #16a34a;
         background-color: #f0f2f6;
         padding: 20px;
         border-radius: 8px;
@@ -138,99 +138,53 @@ LINKS_TJ = {
 ESTADOS = list(LINKS_TJ.keys())
 
 ESTADOS_TEXTO = {
-    "AC": "DO ESTADO DO ACRE",
-    "AL": "DO ESTADO DE ALAGOAS",
-    "AP": "DO ESTADO DO AMAPÁ",
-    "AM": "DO ESTADO DO AMAZONAS",
-    "BA": "DO ESTADO DA BAHIA",
-    "CE": "DO ESTADO DO CEARÁ",
-    "DF": "DO DISTRITO FEDERAL",
-    "ES": "DO ESTADO DO ESPÍRITO SANTO",
-    "GO": "DO ESTADO DE GOIÁS",
-    "MA": "DO ESTADO DO MARANHÃO",
-    "MT": "DO ESTADO DE MATO GROSSO",
-    "MS": "DO ESTADO DE MATO GROSSO DO SUL",
-    "MG": "DO ESTADO DE MINAS GERAIS",
-    "PA": "DO ESTADO DO PARÁ",
-    "PB": "DO ESTADO DA PARAÍBA",
-    "PR": "DO ESTADO DO PARANÁ",
-    "PE": "DO ESTADO DE PERNAMBUCO",
-    "PI": "DO ESTADO DO PIAUÍ",
-    "RJ": "DO ESTADO DO RIO DE JANEIRO",
-    "RN": "DO ESTADO DO RIO GRANDE DO NORTE",
-    "RS": "DO ESTADO DO RIO GRANDE DO SUL",
-    "RO": "DO ESTADO DE RONDÔNIA",
-    "RR": "DO ESTADO DE RORAIMA",
-    "SC": "DO ESTADO DE SANTA CATARINA",
-    "SP": "DO ESTADO DE SÃO PAULO",
-    "SE": "DO ESTADO DE SERGIPE",
-    "TO": "DO ESTADO DO TOCANTINS"
+    "AC": "DO ESTADO DO ACRE", "AL": "DO ESTADO DE ALAGOAS", "AP": "DO ESTADO DO AMAPÁ",
+    "AM": "DO ESTADO DO AMAZONAS", "BA": "DO ESTADO DA BAHIA", "CE": "DO ESTADO DO CEARÁ",
+    "DF": "DO DISTRITO FEDERAL", "ES": "DO ESTADO DO ESPÍRITO SANTO", "GO": "DO ESTADO DE GOIÁS",
+    "MA": "DO ESTADO DO MARANHÃO", "MT": "DO ESTADO DE MATO GROSSO", "MS": "DO ESTADO DE MATO GROSSO DO SUL",
+    "MG": "DO ESTADO DE MINAS GERAIS", "PA": "DO ESTADO DO PARÁ", "PB": "DO ESTADO DA PARAÍBA",
+    "PR": "DO ESTADO DO PARANÁ", "PE": "DO ESTADO DE PERNAMBUCO", "PI": "DO ESTADO DO PIAUÍ",
+    "RJ": "DO ESTADO DO RIO DE JANEIRO", "RN": "DO ESTADO DO RIO GRANDE DO NORTE", "RS": "DO ESTADO DO RIO GRANDE DO SUL",
+    "RO": "DO ESTADO DE RONDÔNIA", "RR": "DO ESTADO DE RORAIMA", "SC": "DO ESTADO DE SANTA CATARINA",
+    "SP": "DO ESTADO DE SÃO PAULO", "SE": "DO ESTADO DE SERGIPE", "TO": "DO ESTADO DO TOCANTINS"
 }
 
 CIAS_MAPPING = {
-    "LATAM": "LATAM Airlines Brasil",
-    "GOL": "GOL Linhas Aéreas S.A.",
-    "Azul": "Azul Linhas Aéreas Brasileiras S.A.",
-    "Voepass": "Voepass Linhas Aéreas",
-    "TAP": "TAP Air Portugal",
-    "American Airlines": "American Airlines Inc.",
-    "United Airlines": "United Airlines Inc.",
-    "Delta": "Delta Air Lines Inc.",
-    "Copa Airlines": "Compañía Panameña de Aviación S.A.",
-    "Air France": "Air France",
-    "KLM": "KLM Royal Dutch Airlines",
-    "Aerolíneas Argentinas": "Aerolíneas Argentinas S.A.",
-    "Emirates": "Emirates Airlines",
-    "Qatar": "Qatar Airways",
-    "Outra": "Outra"
+    "LATAM": "LATAM Airlines Brasil", "GOL": "GOL Linhas Aéreas S.A.",
+    "Azul": "Azul Linhas Aéreas Brasileiras S.A.", "Voepass": "Voepass Linhas Aéreas",
+    "TAP": "TAP Air Portugal", "American Airlines": "American Airlines Inc.",
+    "United Airlines": "United Airlines Inc.", "Delta": "Delta Air Lines Inc.",
+    "Copa Airlines": "Compañía Panameña de Aviación S.A.", "Air France": "Air France",
+    "KLM": "KLM Royal Dutch Airlines", "Aerolíneas Argentinas": "Aerolíneas Argentinas S.A.",
+    "Emirates": "Emirates Airlines", "Qatar": "Qatar Airways", "Outra": "Outra"
 }
 CIAS_SIMPLES = list(CIAS_MAPPING.keys())
 
 AEROPORTOS_NACIONAIS = [
-    "São Paulo - Congonhas (CGH)",
-    "São Paulo - Guarulhos (GRU)",
-    "São Paulo - Viracopos / Campinas (VCP)",
-    "Rio de Janeiro - Santos Dumont (SDU)",
-    "Rio de Janeiro - Galeão (GIG)",
-    "Belo Horizonte - Confins (CNF)",
-    "Brasília - Presidente Juscelino Kubitschek (BSB)",
-    "Salvador - Deputado Luís Eduardo Magalhães (SSA)",
-    "Fortaleza - Pinto Martins (FOR)",
-    "Recife - Guararapes (REC)",
-    "Curitiba - Afonso Pena (CWB)",
-    "Porto Alegre - Salgado Filho (POA)",
-    "Goiânia - Santa Genoveva (GYN)",
-    "Florianópolis - Hercílio Luz (FLN)",
-    "Vitória - Eurico de Aguiar Salles (VIX)",
-    "Manaus - Eduardo Gomes (MAO)",
-    "Belém - Val-de-Cans (BEL)",
-    "Cuiabá - Marechal Rondon (CGB)",
-    "Campo Grande (CGR)",
-    "Maceió - Zumbi dos Palmares (MCZ)",
-    "Aracaju - Santa Maria (AJU)",
-    "Natal - Governador Aluízio Alves (NAT)",
-    "João Pessoa - Presidente Castro Pinto (JPA)",
-    "São Luís - Marechal Cunha Machado (SLZ)",
-    "Teresina - Senador Petrônio Portella (THE)",
-    "Palmas - Lysias Rodrigues (PMW)",
-    "Porto Velho - Governador Jorge Teixeira (PVH)",
-    "Rio Branco - Plácido de Castro (RBR)",
-    "Macapá - Alberto Alcolumbre (MCP)",
-    "Boa Vista - Atlas Brasil Cantanhede (BVB)",
+    "São Paulo - Congonhas (CGH)", "São Paulo - Guarulhos (GRU)",
+    "São Paulo - Viracopos / Campinas (VCP)", "Rio de Janeiro - Santos Dumont (SDU)",
+    "Rio de Janeiro - Galeão (GIG)", "Belo Horizonte - Confins (CNF)",
+    "Brasília - Presidente Juscelino Kubitschek (BSB)", "Salvador - Deputado Luís Eduardo Magalhães (SSA)",
+    "Fortaleza - Pinto Martins (FOR)", "Recife - Guararapes (REC)",
+    "Curitiba - Afonso Pena (CWB)", "Porto Alegre - Salgado Filho (POA)",
+    "Goiânia - Santa Genoveva (GYN)", "Florianópolis - Hercílio Luz (FLN)",
+    "Vitória - Eurico de Aguiar Salles (VIX)", "Manaus - Eduardo Gomes (MAO)",
+    "Belém - Val-de-Cans (BEL)", "Cuiabá - Marechal Rondon (CGB)",
+    "Campo Grande (CGR)", "Maceió - Zumbi dos Palmares (MCZ)",
+    "Aracaju - Santa Maria (AJU)", "Natal - Governador Aluízio Alves (NAT)",
+    "João Pessoa - Presidente Castro Pinto (JPA)", "São Luís - Marechal Cunha Machado (SLZ)",
+    "Teresina - Senador Petrônio Portella (THE)", "Palmas - Lysias Rodrigues (PMW)",
+    "Porto Velho - Governador Jorge Teixeira (PVH)", "Rio Branco - Plácido de Castro (RBR)",
+    "Macapá - Alberto Alcolumbre (MCP)", "Boa Vista - Atlas Brasil Cantanhede (BVB)",
     "Outro / Não listado"
 ]
 
 AEROPORTOS_INTERNACIONAIS = AEROPORTOS_NACIONAIS[:-1] + [
-    "Portugal - Lisboa (LIS)",
-    "Portugal - Porto (OPO)",
-    "Estados Unidos - Miami (MIA)",
-    "Estados Unidos - Nova York (JFK)",
-    "Estados Unidos - Orlando (MCO)",
-    "Argentina - Buenos Aires (EZE)",
-    "França - Paris (CDG)",
-    "Espanha - Madri (MAD)",
-    "Chile - Santiago (SCL)",
-    "Itália - Roma (FCO)",
+    "Portugal - Lisboa (LIS)", "Portugal - Porto (OPO)",
+    "Estados Unidos - Miami (MIA)", "Estados Unidos - Nova York (JFK)",
+    "Estados Unidos - Orlando (MCO)", "Argentina - Buenos Aires (EZE)",
+    "França - Paris (CDG)", "Espanha - Madri (MAD)",
+    "Chile - Santiago (SCL)", "Itália - Roma (FCO)",
     "Outro / Não listado"
 ]
 
@@ -343,7 +297,7 @@ if st.session_state.etapa == "loading":
     st.markdown("""
         <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: sans-serif;">
             <div style="background: white; color: #1e293b; padding: 35px 45px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); text-align: center; max-width: 400px; width: 90%;">
-                <div style="border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 0 auto 20px auto;"></div>
+                <div style="border: 4px solid #f3f3f3; border-top: 4px solid #16a34a; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 0 auto 20px auto;"></div>
                 <h3 style="margin: 0 0 10px 0; font-size: 19px; font-weight: 700; color: #1e293b;">Processando dados...</h3>
                 <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.4;">Analisando parâmetros regulatórios e estruturando documento jurídico.</p>
             </div>
@@ -389,12 +343,7 @@ elif st.session_state.etapa == 1:
     st.markdown("---")
     st.markdown("### Seus Dados Cadastrais")
     
-    col_n, col_c = st.columns(2)
-    with col_n:
-        nome = st.text_input("Nome Completo:", placeholder="Digite seu nome completo", value=st.session_state.get('nome', ''))
-    with col_c:
-        cpf_input = st.text_input("CPF (Formato: 000.000.000-00):", max_chars=14, placeholder="000.000.000-00", value=st.session_state.get('cpf', ''))
-        
+    nome = st.text_input("Nome Completo:", placeholder="Digite seu nome completo", value=st.session_state.get('nome', ''))
     email = st.text_input("E-mail para envio da Petição:", placeholder="seu@email.com", value=st.session_state.get('email', ''))
     
     index_cia = 0
@@ -406,14 +355,12 @@ elif st.session_state.etapa == 1:
     if st.button("Descubra o quanto pode ganhar ➡️", type="primary", use_container_width=True):
         if len(nome.strip().split()) < 2:
             st.error("Por favor, insira seu nome completo (Nome e Sobrenome).")
-        elif len(re.sub(r'\D', '', cpf_input)) != 11:
-            st.error("Por favor, insira um CPF válido com 11 dígitos.")
         elif not email or "@" not in email or "." not in email:
             st.error("Por favor, insira um e-mail válido.")
         else:
             st.session_state.problema = problema_escolhido
             st.session_state.nome = nome.strip()
-            st.session_state.cpf = formatar_cpf(cpf_input)
+            st.session_state.primeiro_nome = nome.strip().split()[0]
             st.session_state.email = email.strip()
             st.session_state.cia_simples = cia_selecionada
             st.session_state.cia_completa = CIAS_MAPPING[cia_selecionada]
@@ -421,9 +368,11 @@ elif st.session_state.etapa == 1:
 
 # --- ETAPA 2: ROTA, CONEXÕES E DADOS DO VOO ---
 elif st.session_state.etapa == 2:
-    st.title("Detalhes da Rota e do Voo")
+    primeiro_nome = st.session_state.get('primeiro_nome', 'Visitante')
+    st.title(f"Agora, {primeiro_nome}, precisamos dos detalhes da sua rota")
     
     endereco = st.text_input("Endereço Residencial Completo:", placeholder="Rua, Número, Bairro, Cidade - CEP", value=st.session_state.get('endereco', ''))
+    cpf_input = st.text_input("CPF (Formato: 000.000.000-00):", max_chars=14, placeholder="000.000.000-00", value=st.session_state.get('cpf', ''))
     
     index_estado = 0
     if 'uf' in st.session_state and st.session_state.uf in ESTADOS:
@@ -453,11 +402,18 @@ elif st.session_state.etapa == 2:
         
     tipo_conexao = st.radio("O voo foi direto ou teve conexões?", ["Sim, foi um voo direto", "Não, teve no mínimo 1 conexão"], horizontal=True)
     
-    col_v1, col_v2 = st.columns(2)
-    with col_v1:
-        pnr = st.text_input("Código Localizador (PNR):", max_chars=6, placeholder="Ex: XYZ123", value=st.session_state.get('pnr', '')).upper()
-    with col_v2:
-        num_voo = st.text_input("Número do Voo Principal:", placeholder="Ex: G3 1409", value=st.session_state.get('num_voo', ''))
+    nao_lembro_dados = st.checkbox("Não tenho o código PNR ou número do voo em mãos agora", value=st.session_state.get('nao_lembro_dados', False))
+
+    if not nao_lembro_dados:
+        col_v1, col_v2 = st.columns(2)
+        with col_v1:
+            pnr = st.text_input("Código Localizador (PNR):", max_chars=6, placeholder="Ex: XYZ123", value=st.session_state.get('pnr', '')).upper()
+        with col_v2:
+            num_voo = st.text_input("Identificação do Voo Principal:", placeholder="Ex: G3 1409", value=st.session_state.get('num_voo', ''))
+    else:
+        pnr = "PENDENTE_USUARIO"
+        num_voo = "PENDENTE_USUARIO"
+        st.info("💡 Tudo bem! Você poderá atualizar esses dados posteriormente com o suporte ou na petição.")
         
     data_voo = st.date_input("Data do Voo:", max_value=date(2026, 7, 28), format="DD/MM/YYYY")
 
@@ -482,15 +438,21 @@ elif st.session_state.etapa == 2:
             origem_valida = origem.strip() if origem_sel == "Outro / Não listado" else origem
             destino_valida = destino.strip() if destino_sel == "Outro / Não listado" else destino
             
-            if not endereco or len(pnr) != 6 or not num_voo or not origem_valida or not destino_valida:
-                st.error("Preencha todos os campos obrigatórios, incluindo os nomes dos aeroportos personalizados se selecionados.")
+            if not endereco or len(re.sub(r'\D', '', cpf_input)) != 11:
+                st.error("Por favor, preencha o endereço completo e um CPF válido com 11 dígitos.")
+            elif not nao_lembro_dados and (len(pnr) != 6 or not num_voo):
+                st.error("Preencha o PNR (6 dígitos) e a identificação do voo, ou marque a opção 'Não tenho o código PNR ou número do voo em mãos agora'.")
+            elif not origem_valida or not destino_valida:
+                st.error("Preencha os aeroportos de origem e destino.")
             elif origem_valida == destino_valida:
                 st.error("A origem e o destino não podem ser iguais.")
             elif not prazo_valido:
                 st.error(f"❌ Não é possível prosseguir. O prazo limite legal de {limite_texto} para requerer esta indenização já expirou.")
             else:
                 st.session_state.endereco = endereco
+                st.session_state.cpf = formatar_cpf(cpf_input)
                 st.session_state.uf = uf
+                st.session_state.nao_lembro_dados = nao_lembro_dados
                 st.session_state.pnr = pnr
                 st.session_state.num_voo = num_voo
                 st.session_state.origem_sel = origem_sel
@@ -553,14 +515,12 @@ elif st.session_state.etapa == 4:
     if not st.session_state.pagamento_aprovado:
         st.markdown(f"""
         <div class="highlight-box">
-            <h3>⚠️ Não gaste 30% da sua indenização com terceiros!</h3>
-            <p>Advogados convencionais ou plataformas intermediárias cobram até 1/3 do valor que você ganhar no tribunal.</p>
-            <p>Por um valor fixo, você baixa a sua petição pronta e recebe o roteiro exato para exigir seus direitos sozinho.</p>
-            <h2 style='color: #2563eb;'>Apenas R$ 56,90</h2>
+            <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 18px; font-weight: 700;">Fique com 100% da sua indenização</h3>
+            <p style="margin: 0; font-size: 14px; line-height: 1.5;">Advogados e intermediários cobram até 30% do que você ganha no tribunal. Com a petição pronta, você mesmo protocola em minutos e coloca todo o valor no bolso, sem dor de cabeça.</p>
         </div>
         """, unsafe_allow_html=True)
         
-        st.link_button("Liberar Documento por R$ 56,90", "https://link-do-mercado-pago.com", type="primary", use_container_width=True)
+        st.link_button("Liberar Meu Documento Agora (R$ 56,90)", "https://link-do-mercado-pago.com", type="primary", use_container_width=True)
         
         st.markdown("---")
         st.write("🔧 **Ambiente de Teste:**")
