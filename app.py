@@ -9,7 +9,6 @@ st.set_page_config(page_title="Indenização de Voos", layout="centered", initia
 
 st.markdown("""
     <style>
-    /* Remove o cabeçalho nativo e ajusta o topo para eliminar o espaço em branco */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -20,7 +19,6 @@ st.markdown("""
         max-width: 750px;
     }
     
-    /* Força os botões primários do Streamlit para o Verde Corporativo de Conversão (#16a34a) */
     div.stButton > button[kind="primary"] {
         background-color: #16a34a !important;
         border-color: #16a34a !important;
@@ -31,7 +29,6 @@ st.markdown("""
         border-color: #15803d !important;
     }
 
-    /* Animação de pulso mais evidente */
     @keyframes pulse-slow {
         0% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.5; transform: scale(1.03); }
@@ -69,7 +66,6 @@ st.markdown("""
         user-select: none;
     }
     
-    /* Caixa de destaque com contraste corrigido e legibilidade garantida */
     .highlight-box {
         border-left: 5px solid #16a34a;
         background-color: #f0f2f6;
@@ -82,7 +78,6 @@ st.markdown("""
         color: #1e293b !important;
     }
     
-    /* Botão Flutuante Apenas com o Ícone do WhatsApp */
     .whatsapp-float {
         position: fixed;
         bottom: 25px;
@@ -94,7 +89,7 @@ st.markdown("""
         border-radius: 50%;
         text-align: center;
         box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
-        z-index: 99999;
+        z-index: 9999;
         text-decoration: none !important;
         display: flex;
         align-items: center;
@@ -309,7 +304,7 @@ if st.session_state.etapa == "loading":
         }
         </style>
     """, unsafe_allow_html=True)
-    time.sleep(1.2)
+    time.sleep(2.0)
     st.session_state.etapa = st.session_state.target_etapa
     st.rerun()
 
@@ -413,7 +408,7 @@ elif st.session_state.etapa == 2:
     else:
         pnr = "PENDENTE_USUARIO"
         num_voo = "PENDENTE_USUARIO"
-        st.info("💡 Tudo bem! Você poderá atualizar esses dados posteriormente com o suporte ou na petição.")
+        st.info(f"💡 Tudo bem, {primeiro_nome}! Você poderá atualizar esses dados posteriormente com o suporte ou na petição.")
         
     data_voo = st.date_input("Data do Voo:", max_value=date(2026, 7, 28), format="DD/MM/YYYY")
 
@@ -472,10 +467,17 @@ elif st.session_state.etapa == 3:
     if st.button("⬅️ Corrigir Dados"):
         ir_para_etapa(2)
             
+    primeiro_nome = st.session_state.get('primeiro_nome', 'Visitante')
     st.title("Pré-visualização da sua Petição")
-    st.info("Confira os dados estruturados abaixo. A fundamentação legal completa será liberada na finalização.")
+    st.info(f"{primeiro_nome}, confira os dados estruturados abaixo. A fundamentação legal completa será liberada na finalização.")
     
     uf_extenso_preview = ESTADOS_TEXTO.get(st.session_state.uf, f"DO ESTADO DE {st.session_state.uf}")
+
+    pnr_val = st.session_state.pnr
+    pnr_html = f'<span style="color: red;">{pnr_val}</span>' if pnr_val == "PENDENTE_USUARIO" else pnr_val
+
+    num_voo_val = st.session_state.num_voo
+    num_voo_html = f'<span style="color: red;">{num_voo_val}</span>' if num_voo_val == "PENDENTE_USUARIO" else num_voo_val
 
     st.markdown(f"""
     <div class="doc-container">
@@ -486,8 +488,8 @@ elif st.session_state.etapa == 3:
         <p align="center"><b>AÇÃO DE INDENIZAÇÃO POR DANOS MORAIS E MATERIAIS</b></p>
         <p><b>REQUERIDO:</b> {st.session_state.cia_completa.upper()}, pessoa jurídica de direito privado...</p>
         <p><b>I - DOS FATOS</b><br>
-        O(A) requerente adquiriu bilhetes aéreos sob o código localizador {st.session_state.pnr} (Voo {st.session_state.num_voo}), para o trecho entre {st.session_state.trecho} ({st.session_state.tipo_voo}), com data marcada para {st.session_state.data_voo_br}. Incidente registrado: {st.session_state.problema}. Ocorre que a empresa falhou gravemente na prestação do serviço...</p>
-        <p><b>II - DO DIREITO (Conteúdo Bloqueado)</b></p>
+        O(A) requerente adquiriu bilhetes aéreos sob o código localizador {pnr_html} (Voo {num_voo_html}), para o trecho entre {st.session_state.trecho} ({st.session_state.tipo_voo}), com data marcada para {st.session_state.data_voo_br}. Incidente registrado: {st.session_state.problema}. Ocorre que a empresa falhou gravemente na prestação do serviço...</p>
+        <p><b>II - DO DIREITO</b></p>
         <p class="blur-text">
         A relação jurídica submete-se às regras do Código de Defesa do Consumidor. A responsabilidade da companhia aérea é objetiva nos termos do artigo 14 da Lei 8078/90. O dano moral ocorre in re ipsa configurando quebra das resoluções da ANAC aplicáveis à espécie e jurisprudência pacífica do STJ.
         </p>
