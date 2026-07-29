@@ -189,7 +189,7 @@ def formatar_cpf(cpf_string):
         return f"{cpf_numeros[:3]}.{cpf_numeros[3:6]}.{cpf_numeros[6:9]}-{cpf_numeros[9:]}"
     return cpf_string
 
-def gerar_pdf(uf, nome, cpf, endereco, cia_completa, pnr, trecho, data_voo_br, tipo_voo, problema):
+def gerar_pdf(uf, nome, cpf, endereco, cia_completa, pnr, num_voo, trecho, data_voo_br, tipo_voo, problema):
     pdf = FPDF()
     pdf.add_page()
     
@@ -219,7 +219,11 @@ def gerar_pdf(uf, nome, cpf, endereco, cia_completa, pnr, trecho, data_voo_br, t
     pdf.set_font("Arial", 'B', 10)
     pdf.multi_cell(0, 5, txt("I - DOS FATOS"), align="L")
     pdf.set_font("Arial", '', 10)
-    fatos = (f"O(A) requerente adquiriu bilhetes aéreos sob o código localizador {pnr}, para o trecho entre {trecho} ({tipo_voo}), com data prevista para o voo em {data_voo_br}.\n\n"
+    
+    trecho_voo_str = f" (Voo {num_voo})" if num_voo and num_voo != "PENDENTE_USUARIO" else ""
+    pnr_str = "pendente" if pnr == "PENDENTE_USUARIO" else f"código localizador {pnr}"
+    
+    fatos = (f"O(A) requerente adquiriu bilhetes aéreos sob o {pnr_str}{trecho_voo_str}, para o trecho entre {trecho} ({tipo_voo}), com data prevista para o voo em {data_voo_br}.\n\n"
              f"Ocorre que, na data aprazada, a empresa requerida falhou na prestação do serviço contratado, incorrendo em {problema.lower()} da viagem, sem prestar a devida assistência material, em afronta direta às normativas aplicáveis.\n\n"
              f"Tal falha causou severos transtornos, angústia e abalo emocional ao(à) requerente, que teve sua rotina abruptamente desorganizada por ato exclusivo da companhia aérea.")
     pdf.multi_cell(0, 5, txt(fatos), align="J")
@@ -341,10 +345,11 @@ elif st.session_state.etapa == 1:
     nome = st.text_input("Nome Completo:", placeholder="Digite seu nome completo", value=st.session_state.get('nome', ''))
     email = st.text_input("E-mail para envio da Petição:", placeholder="seu@email.com", value=st.session_state.get('email', ''))
     
-    index_cia = 0
+    # Selectbox sem pré-seleção (index=None com placeholder)
+    index_cia = None
     if 'cia_simples' in st.session_state and st.session_state.cia_simples in CIAS_SIMPLES:
         index_cia = CIAS_SIMPLES.index(st.session_state.cia_simples)
-    cia_selecionada = st.selectbox("Companhia Aérea Responsável:", CIAS_SIMPLES, index=index_cia)
+    cia_selecionada = st.selectbox("Companhia Aérea Responsável:", CIAS_SIMPLES, index=index_cia, placeholder="Selecione a companhia aérea...")
     
     st.markdown("")
     if st.button("Descubra o quanto pode ganhar ➡️", type="primary", use_container_width=True):
@@ -352,6 +357,8 @@ elif st.session_state.etapa == 1:
             st.error("Por favor, insira seu nome completo (Nome e Sobrenome).")
         elif not email or "@" not in email or "." not in email:
             st.error("Por favor, insira um e-mail válido.")
+        elif not cia_selecionada:
+            st.error("Por favor, selecione a companhia aérea responsável.")
         else:
             st.session_state.problema = problema_escolhido
             st.session_state.nome = nome.strip()
@@ -369,10 +376,11 @@ elif st.session_state.etapa == 2:
     endereco = st.text_input("Endereço Residencial Completo:", placeholder="Rua, Número, Bairro, Cidade - CEP", value=st.session_state.get('endereco', ''))
     cpf_input = st.text_input("CPF (Formato: 000.000.000-00):", max_chars=14, placeholder="000.000.000-00", value=st.session_state.get('cpf', ''))
     
-    index_estado = 0
+    # Selectbox UF sem pré-seleção
+    index_estado = None
     if 'uf' in st.session_state and st.session_state.uf in ESTADOS:
         index_estado = ESTADOS.index(st.session_state.uf)
-    uf = st.selectbox("Selecione seu Estado (UF) para protocolo:", ESTADOS, index=index_estado)
+    uf = st.selectbox("Selecione seu Estado (UF) para protocolo:", ESTADOS, index=index_estado, placeholder="Selecione o estado (UF)...")
 
     tipo_voo = st.radio("Tipo de Voo:", ["Nacional", "Internacional"], horizontal=True, index=0 if st.session_state.get('tipo_voo', 'Nacional') == 'Nacional' else 1)
 
@@ -380,56 +388,50 @@ elif st.session_state.etapa == 2:
 
     col1, col2 = st.columns(2)
     with col1:
-        index_origem = lista_aeroportos.index(st.session_state.get('origem_sel', lista_aeroportos[0])) if st.session_state.get('origem_sel') in lista_aeroportos else 0
-        origem_sel = st.selectbox("Aeroporto Específico de Origem:", lista_aeroportos, index=index_origem)
+        index_origem = None
+        if 'origem_sel' in st.session_state and st.session_state.get('origem_sel') in lista_aeroportos:
+            index_origem = lista_aeroportos.index(st.session_state.get('origem_sel'))
+        origem_sel = st.selectbox("Aeroporto Específico de Origem:", lista_aeroportos, index=index_origem, placeholder="Escolha o aeroporto de origem...")
+        
         if origem_sel == "Outro / Não listado":
             origem = st.text_input("Digite a Origem (Cidade - Sigla IATA):", placeholder="Ex: Ribeirão Preto - SP (RAO)", value=st.session_state.get('origem_custom', ''))
         else:
-            origem = origem_sel
+            origem = origem_sel if origem_sel else ""
 
     with col2:
-        index_destino = lista_aeroportos.index(st.session_state.get('destino_sel', lista_aeroportos[1] if len(lista_aeroportos) > 1 else lista_aeroportos[0])) if st.session_state.get('destino_sel') in lista_aeroportos else (1 if len(lista_aeroportos) > 1 else 0)
-        destino_sel = st.selectbox("Aeroporto Específico de Destino Final:", lista_aeroportos, index=index_destino)
+        index_destino = None
+        if 'destino_sel' in st.session_state and st.session_state.get('destino_sel') in lista_aeroportos:
+            index_destino = lista_aeroportos.index(st.session_state.get('destino_sel'))
+        destino_sel = st.selectbox("Aeroporto Específico de Destino Final:", lista_aeroportos, index=index_destino, placeholder="Escolha o aeroporto de destino...")
+        
         if destino_sel == "Outro / Não listado":
             destino = st.text_input("Digite o Destino (Cidade - Sigla IATA):", placeholder="Ex: Joinville - SC (JOI)", value=st.session_state.get('destino_custom', ''))
         else:
-            destino = destino_sel
+            destino = destino_sel if destino_sel else ""
         
     tipo_conexao = st.radio("O voo foi direto ou teve conexões?", ["Sim, foi um voo direto", "Não, teve no mínimo 1 conexão"], horizontal=True)
     
-    # Lógica reativa: se o usuário digitar algo válido nos inputs, desmarca automaticamente a caixa de "não lembro"
-    pnr_atual = st.session_state.get('pnr_input', st.session_state.get('pnr', ''))
-    voo_atual = st.session_state.get('num_voo_input', st.session_state.get('num_voo', ''))
-    
-    if (pnr_atual and pnr_atual != "PENDENTE_USUARIO") or (voo_atual and voo_atual != "PENDENTE_USUARIO"):
-        st.session_state.nao_lembro_dados = False
-        if st.session_state.get('pnr') == "PENDENTE_USUARIO":
-            st.session_state.pnr = ""
-        if st.session_state.get('num_voo') == "PENDENTE_USUARIO":
-            st.session_state.num_voo = ""
+    # Lógica reativa segura para desmarcar o checkbox se o usuário digitar no PNR
+    pnr_input_val = st.session_state.get('pnr_input', '')
+    if pnr_input_val and pnr_input_val != "PENDENTE_USUARIO":
+        if 'nao_lembro_dados' in st.session_state:
+            del st.session_state['nao_lembro_dados']
 
-    if st.session_state.get('nao_lembro_dados', False):
-        st.session_state.pnr = "PENDENTE_USUARIO"
-        st.session_state.num_voo = "PENDENTE_USUARIO"
-
-    # Campos de PNR e Voo
     col_v1, col_v2 = st.columns(2)
-    aviso_pendente = st.session_state.get('nao_lembro_dados', False) or (st.session_state.get('pnr') == "PENDENTE_USUARIO")
+    aviso_pendente = st.session_state.get('nao_lembro_dados', False)
     
     with col_v1:
         label_pnr = "⚠️ Código Localizador (PNR) - Pendente:" if aviso_pendente else "Código Localizador (PNR):"
-        pnr = st.text_input(label_pnr, max_chars=6, placeholder="Ex: XYZ123", value="" if st.session_state.get('pnr') == "PENDENTE_USUARIO" else st.session_state.get('pnr', ''), key="pnr_input").upper()
+        pnr = st.text_input(label_pnr, max_chars=6, placeholder="Ex: XYZ123", key="pnr_input").upper()
     with col_v2:
-        label_voo = "⚠️ Identificação do Voo Principal - Pendente:" if aviso_pendente else "Identificação do Voo Principal:"
-        num_voo = st.text_input(label_voo, placeholder="Ex: G3 1409", value="" if st.session_state.get('num_voo') == "PENDENTE_USUARIO" else st.session_state.get('num_voo', ''), key="num_voo_input")
+        num_voo = st.text_input("Identificação do Voo Principal (Opcional):", placeholder="Ex: G3 1409", key="num_voo_input")
 
-    # Checkbox colocado logo ABAIXO dos campos de preenchimento
-    nao_lembro_dados = st.checkbox("Não tenho o código PNR ou número do voo em mãos agora", value=st.session_state.get('nao_lembro_dados', False), key="nao_lembro_dados")
+    nao_lembro_dados = st.checkbox("Não tenho o código PNR em mãos agora", key="nao_lembro_dados")
 
     if nao_lembro_dados:
         pnr = "PENDENTE_USUARIO"
-        num_voo = "PENDENTE_USUARIO"
-        st.info(f"💡 Tudo bem, {primeiro_nome}! Você poderá atualizar esses dados posteriormente com o suporte ou na petição.")
+        num_voo = ""
+        st.info(f"💡 Tudo bem, {primeiro_nome}! Você poderá atualizar esse dado posteriormente com o suporte ou na petição.")
         
     data_voo = st.date_input("Data do Voo:", max_value=date(2026, 7, 28), format="DD/MM/YYYY")
 
@@ -456,8 +458,14 @@ elif st.session_state.etapa == 2:
             
             if not endereco or len(re.sub(r'\D', '', cpf_input)) != 11:
                 st.error("Por favor, preencha o endereço completo e um CPF válido com 11 dígitos.")
-            elif not nao_lembro_dados and (len(pnr) != 6 or not num_voo):
-                st.error("Preencha o PNR (6 dígitos) e a identificação do voo, ou marque a opção 'Não tenho o código PNR ou número do voo em mãos agora'.")
+            elif not uf:
+                st.error("Por favor, selecione o Estado (UF) para protocolo.")
+            elif not origem_sel:
+                st.error("Por favor, selecione o aeroporto de origem.")
+            elif not destino_sel:
+                st.error("Por favor, selecione o aeroporto de destino final.")
+            elif not nao_lembro_dados and len(pnr) != 6:
+                st.error("Preencha o Código Localizador (PNR) com exatamente 6 dígitos, ou marque a opção de que não possui o código em mãos.")
             elif not origem_valida or not destino_valida:
                 st.error("Preencha os aeroportos de origem e destino.")
             elif origem_valida == destino_valida:
@@ -470,7 +478,7 @@ elif st.session_state.etapa == 2:
                 st.session_state.uf = uf
                 st.session_state.nao_lembro_dados = nao_lembro_dados
                 st.session_state.pnr = pnr
-                st.session_state.num_voo = num_voo
+                st.session_state.num_voo = num_voo.strip()
                 st.session_state.origem_sel = origem_sel
                 st.session_state.destino_sel = destino_sel
                 st.session_state.origem_custom = origem if origem_sel == "Outro / Não listado" else ""
@@ -497,8 +505,8 @@ elif st.session_state.etapa == 3:
     pnr_val = st.session_state.pnr
     pnr_html = f'<span style="color: red;">{pnr_val}</span>' if pnr_val == "PENDENTE_USUARIO" else pnr_val
 
-    num_voo_val = st.session_state.num_voo
-    num_voo_html = f'<span style="color: red;">{num_voo_val}</span>' if num_voo_val == "PENDENTE_USUARIO" else num_voo_val
+    num_voo_val = st.session_state.get('num_voo', '')
+    num_voo_html = f" (Voo {num_voo_val})" if num_voo_val else ""
 
     st.markdown(f"""
     <div class="doc-container">
@@ -509,7 +517,7 @@ elif st.session_state.etapa == 3:
         <p align="center"><b>AÇÃO DE INDENIZAÇÃO POR DANOS MORAIS E MATERIAIS</b></p>
         <p><b>REQUERIDO:</b> {st.session_state.cia_completa.upper()}, pessoa jurídica de direito privado...</p>
         <p><b>I - DOS FATOS</b><br>
-        O(A) requerente adquiriu bilhetes aéreos sob o código localizador {pnr_html} (Voo {num_voo_html}), para o trecho entre {st.session_state.trecho} ({st.session_state.tipo_voo}), com data marcada para {st.session_state.data_voo_br}. Incidente registrado: {st.session_state.problema}. Ocorre que a empresa falhou gravemente na prestação do serviço...</p>
+        O(A) requerente adquiriu bilhetes aéreos sob o código localizador {pnr_html}{num_voo_html}, para o trecho entre {st.session_state.trecho} ({st.session_state.tipo_voo}), com data marcada para {st.session_state.data_voo_br}. Incidente registrado: {st.session_state.problema}. Ocorre que a empresa falhou gravemente na prestação do serviço...</p>
         <p><b>II - DO DIREITO</b></p>
         <p class="blur-text">
         A relação jurídica submete-se às regras do Código de Defesa do Consumidor. A responsabilidade da companhia aérea é objetiva nos termos do artigo 14 da Lei 8078/90. O dano moral ocorre in re ipsa configurando quebra das resoluções da ANAC aplicáveis à espécie e jurisprudência pacífica do STJ.
@@ -562,6 +570,7 @@ elif st.session_state.etapa == 4:
             st.session_state.endereco, 
             st.session_state.cia_completa, 
             st.session_state.pnr,
+            st.session_state.get('num_voo', ''),
             st.session_state.trecho, 
             st.session_state.data_voo_br, 
             st.session_state.tipo_voo,
