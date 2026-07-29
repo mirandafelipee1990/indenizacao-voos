@@ -397,21 +397,34 @@ elif st.session_state.etapa == 2:
         
     tipo_conexao = st.radio("O voo foi direto ou teve conexões?", ["Sim, foi um voo direto", "Não, teve no mínimo 1 conexão"], horizontal=True)
     
-    # Campos de PNR e Voo colocados PRIMEIRO
-    col_v1, col_v2 = st.columns(2)
+    # Lógica reativa: se o usuário digitar algo válido nos inputs, desmarca automaticamente a caixa de "não lembro"
+    pnr_atual = st.session_state.get('pnr_input', st.session_state.get('pnr', ''))
+    voo_atual = st.session_state.get('num_voo_input', st.session_state.get('num_voo', ''))
     
-    # Destaca os campos em vermelho/aviso se estiverem pendentes ao voltar
-    aviso_pendente = st.session_state.get('nao_lembro_dados', False)
+    if (pnr_atual and pnr_atual != "PENDENTE_USUARIO") or (voo_atual and voo_atual != "PENDENTE_USUARIO"):
+        st.session_state.nao_lembro_dados = False
+        if st.session_state.get('pnr') == "PENDENTE_USUARIO":
+            st.session_state.pnr = ""
+        if st.session_state.get('num_voo') == "PENDENTE_USUARIO":
+            st.session_state.num_voo = ""
+
+    if st.session_state.get('nao_lembro_dados', False):
+        st.session_state.pnr = "PENDENTE_USUARIO"
+        st.session_state.num_voo = "PENDENTE_USUARIO"
+
+    # Campos de PNR e Voo
+    col_v1, col_v2 = st.columns(2)
+    aviso_pendente = st.session_state.get('nao_lembro_dados', False) or (st.session_state.get('pnr') == "PENDENTE_USUARIO")
     
     with col_v1:
         label_pnr = "⚠️ Código Localizador (PNR) - Pendente:" if aviso_pendente else "Código Localizador (PNR):"
-        pnr = st.text_input(label_pnr, max_chars=6, placeholder="Ex: XYZ123", value=st.session_state.get('pnr', '') if st.session_state.get('pnr') != "PENDENTE_USUARIO" else '').upper()
+        pnr = st.text_input(label_pnr, max_chars=6, placeholder="Ex: XYZ123", value="" if st.session_state.get('pnr') == "PENDENTE_USUARIO" else st.session_state.get('pnr', ''), key="pnr_input").upper()
     with col_v2:
         label_voo = "⚠️ Identificação do Voo Principal - Pendente:" if aviso_pendente else "Identificação do Voo Principal:"
-        num_voo = st.text_input(label_voo, placeholder="Ex: G3 1409", value=st.session_state.get('num_voo', '') if st.session_state.get('num_voo') != "PENDENTE_USUARIO" else '')
+        num_voo = st.text_input(label_voo, placeholder="Ex: G3 1409", value="" if st.session_state.get('num_voo') == "PENDENTE_USUARIO" else st.session_state.get('num_voo', ''), key="num_voo_input")
 
     # Checkbox colocado logo ABAIXO dos campos de preenchimento
-    nao_lembro_dados = st.checkbox("Não tenho o código PNR ou número do voo em mãos agora", value=st.session_state.get('nao_lembro_dados', False))
+    nao_lembro_dados = st.checkbox("Não tenho o código PNR ou número do voo em mãos agora", value=st.session_state.get('nao_lembro_dados', False), key="nao_lembro_dados")
 
     if nao_lembro_dados:
         pnr = "PENDENTE_USUARIO"
@@ -577,7 +590,7 @@ elif st.session_state.etapa == 4:
         """)
         
         link_do_tribunal = LINKS_TJ.get(st.session_state.uf, "https://www.tjsp.jus.br")
-        st.link_button(f"🔗 Protocolar Petição no Portal do TJ{st.session_state.uf}", link_do_tribunal)
+        st.link_button(f"🔗 Protocolar Petição em Portal do TJ{st.session_state.uf}", link_do_tribunal)
         
         st.markdown("""
         ---
