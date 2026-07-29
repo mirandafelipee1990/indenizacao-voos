@@ -397,15 +397,23 @@ elif st.session_state.etapa == 2:
         
     tipo_conexao = st.radio("O voo foi direto ou teve conexões?", ["Sim, foi um voo direto", "Não, teve no mínimo 1 conexão"], horizontal=True)
     
+    # Campos de PNR e Voo colocados PRIMEIRO
+    col_v1, col_v2 = st.columns(2)
+    
+    # Destaca os campos em vermelho/aviso se estiverem pendentes ao voltar
+    aviso_pendente = st.session_state.get('nao_lembro_dados', False)
+    
+    with col_v1:
+        label_pnr = "⚠️ Código Localizador (PNR) - Pendente:" if aviso_pendente else "Código Localizador (PNR):"
+        pnr = st.text_input(label_pnr, max_chars=6, placeholder="Ex: XYZ123", value=st.session_state.get('pnr', '') if st.session_state.get('pnr') != "PENDENTE_USUARIO" else '').upper()
+    with col_v2:
+        label_voo = "⚠️ Identificação do Voo Principal - Pendente:" if aviso_pendente else "Identificação do Voo Principal:"
+        num_voo = st.text_input(label_voo, placeholder="Ex: G3 1409", value=st.session_state.get('num_voo', '') if st.session_state.get('num_voo') != "PENDENTE_USUARIO" else '')
+
+    # Checkbox colocado logo ABAIXO dos campos de preenchimento
     nao_lembro_dados = st.checkbox("Não tenho o código PNR ou número do voo em mãos agora", value=st.session_state.get('nao_lembro_dados', False))
 
-    if not nao_lembro_dados:
-        col_v1, col_v2 = st.columns(2)
-        with col_v1:
-            pnr = st.text_input("Código Localizador (PNR):", max_chars=6, placeholder="Ex: XYZ123", value=st.session_state.get('pnr', '')).upper()
-        with col_v2:
-            num_voo = st.text_input("Identificação do Voo Principal:", placeholder="Ex: G3 1409", value=st.session_state.get('num_voo', ''))
-    else:
+    if nao_lembro_dados:
         pnr = "PENDENTE_USUARIO"
         num_voo = "PENDENTE_USUARIO"
         st.info(f"💡 Tudo bem, {primeiro_nome}! Você poderá atualizar esses dados posteriormente com o suporte ou na petição.")
