@@ -345,7 +345,6 @@ elif st.session_state.etapa == 1:
     nome = st.text_input("Nome Completo:", placeholder="Digite seu nome completo", value=st.session_state.get('nome', ''))
     email = st.text_input("E-mail para envio da Petição:", placeholder="seu@email.com", value=st.session_state.get('email', ''))
     
-    # Selectbox sem pré-seleção (index=None com placeholder)
     index_cia = None
     if 'cia_simples' in st.session_state and st.session_state.cia_simples in CIAS_SIMPLES:
         index_cia = CIAS_SIMPLES.index(st.session_state.cia_simples)
@@ -376,7 +375,6 @@ elif st.session_state.etapa == 2:
     endereco = st.text_input("Endereço Residencial Completo:", placeholder="Rua, Número, Bairro, Cidade - CEP", value=st.session_state.get('endereco', ''))
     cpf_input = st.text_input("CPF (Formato: 000.000.000-00):", max_chars=14, placeholder="000.000.000-00", value=st.session_state.get('cpf', ''))
     
-    # Selectbox UF sem pré-seleção
     index_estado = None
     if 'uf' in st.session_state and st.session_state.uf in ESTADOS:
         index_estado = ESTADOS.index(st.session_state.uf)
@@ -411,14 +409,17 @@ elif st.session_state.etapa == 2:
         
     tipo_conexao = st.radio("O voo foi direto ou teve conexões?", ["Sim, foi um voo direto", "Não, teve no mínimo 1 conexão"], horizontal=True)
     
-    # Lógica reativa segura para desmarcar o checkbox se o usuário digitar no PNR
+    # Gerenciamento seguro de estado da caixa de seleção sem conflito de keys
+    if 'checked_nao_lembro' not in st.session_state:
+        st.session_state.checked_nao_lembro = False
+
+    # Lógica reativa segura: se o usuário digitar no PNR, desmarcamos a flag antes de renderizar
     pnr_input_val = st.session_state.get('pnr_input', '')
     if pnr_input_val and pnr_input_val != "PENDENTE_USUARIO":
-        if 'nao_lembro_dados' in st.session_state:
-            del st.session_state['nao_lembro_dados']
+        st.session_state.checked_nao_lembro = False
 
     col_v1, col_v2 = st.columns(2)
-    aviso_pendente = st.session_state.get('nao_lembro_dados', False)
+    aviso_pendente = st.session_state.checked_nao_lembro
     
     with col_v1:
         label_pnr = "⚠️ Código Localizador (PNR) - Pendente:" if aviso_pendente else "Código Localizador (PNR):"
@@ -426,9 +427,14 @@ elif st.session_state.etapa == 2:
     with col_v2:
         num_voo = st.text_input("Identificação do Voo Principal (Opcional):", placeholder="Ex: G3 1409", key="num_voo_input")
 
-    nao_lembro_dados = st.checkbox("Não tenho o código PNR em mãos agora", key="nao_lembro_dados")
+    # Checkbox sem key colidente, controlado exclusivamente via session_state
+    checked_atual = st.checkbox(
+        "Não tenho o código PNR em mãos agora", 
+        value=st.session_state.checked_nao_lembro
+    )
+    st.session_state.checked_nao_lembro = checked_atual
 
-    if nao_lembro_dados:
+    if st.session_state.checked_nao_lembro:
         pnr = "PENDENTE_USUARIO"
         num_voo = ""
         st.info(f"💡 Tudo bem, {primeiro_nome}! Você poderá atualizar esse dado posteriormente com o suporte ou na petição.")
@@ -464,7 +470,7 @@ elif st.session_state.etapa == 2:
                 st.error("Por favor, selecione o aeroporto de origem.")
             elif not destino_sel:
                 st.error("Por favor, selecione o aeroporto de destino final.")
-            elif not nao_lembro_dados and len(pnr) != 6:
+            elif not st.session_state.checked_nao_lembro and len(pnr) != 6:
                 st.error("Preencha o Código Localizador (PNR) com exatamente 6 dígitos, ou marque a opção de que não possui o código em mãos.")
             elif not origem_valida or not destino_valida:
                 st.error("Preencha os aeroportos de origem e destino.")
@@ -476,7 +482,7 @@ elif st.session_state.etapa == 2:
                 st.session_state.endereco = endereco
                 st.session_state.cpf = formatar_cpf(cpf_input)
                 st.session_state.uf = uf
-                st.session_state.nao_lembro_dados = nao_lembro_dados
+                st.session_state.nao_lembro_dados = st.session_state.checked_nao_lembro
                 st.session_state.pnr = pnr
                 st.session_state.num_voo = num_voo.strip()
                 st.session_state.origem_sel = origem_sel
