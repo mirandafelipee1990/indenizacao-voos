@@ -98,7 +98,7 @@ st.markdown("""
     }
     .whatsapp-float {
         position: fixed;
-        bottom: 90px;
+        bottom: 25px;
         right: 25px;
         background-color: #25d366;
         color: white !important;
@@ -117,27 +117,6 @@ st.markdown("""
         background-color: #128c7e !important;
         color: white !important;
     }
-    .scroll-top-float {
-        position: fixed;
-        bottom: 25px;
-        right: 25px;
-        background-color: #1e293b;
-        color: white !important;
-        width: 55px;
-        height: 55px;
-        border-radius: 50%;
-        text-align: center;
-        box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
-        z-index: 9999;
-        text-decoration: none !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-    }
-    .scroll-top-float:hover {
-        background-color: #0f172a !important;
-    }
     @media (max-width: 768px) {
         h1 {
             font-size: 1.75rem !important;
@@ -153,7 +132,6 @@ st.markdown("""
         }
     }
     </style>
-    <a href="#topo" target="_self" class="scroll-top-float" title="Voltar ao Topo">⬆️</a>
     <a href="https://wa.me/556281096811?text=Olá,%20estou%20no%20site%20Resolfix%20e%20preciso%20de%20ajuda." target="_blank" class="whatsapp-float" title="Suporte WhatsApp">
         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
           <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.601 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.558 6.558 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.193-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.012-.304.088-.403.087-.088.197-.232.296-.348.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34l-.38-.008c-.133 0-.348.048-.53.247-.182.198-.694.678-.694 1.654 0 .976.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.078.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
@@ -328,7 +306,6 @@ if 'etapa' not in st.session_state:
 if 'target_etapa' not in st.session_state:
     st.session_state.target_etapa = 1
 
-# Funções de navegação separadas:
 def avancar_etapa(destino):
     st.session_state.target_etapa = destino
     st.session_state.etapa = "loading"
@@ -363,7 +340,7 @@ if st.session_state.etapa == "loading":
     """, unsafe_allow_html=True)
     time.sleep(1.5)
     st.session_state.etapa = st.session_state.target_etapa
-    st.markdown("<script>window.parent.location.href='#topo';</script>", unsafe_allow_html=True)
+    st.markdown("<script>window.parent.scrollTo({ top: 0, behavior: 'instant' });</script>", unsafe_allow_html=True)
     st.rerun()
 
 elif st.session_state.etapa == 1:
