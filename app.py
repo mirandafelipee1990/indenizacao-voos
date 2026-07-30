@@ -19,7 +19,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Âncora para o topo da página
 st.markdown('<div id="topo"></div>', unsafe_allow_html=True)
 
 st.markdown("""
@@ -329,9 +328,14 @@ if 'etapa' not in st.session_state:
 if 'target_etapa' not in st.session_state:
     st.session_state.target_etapa = 1
 
-def ir_para_etapa(destino):
+# Funções de navegação separadas:
+def avancar_etapa(destino):
     st.session_state.target_etapa = destino
     st.session_state.etapa = "loading"
+    st.rerun()
+
+def voltar_etapa(destino):
+    st.session_state.etapa = destino
     st.rerun()
 
 @st.dialog("⚠️ Atenção: Informação Pendente")
@@ -339,7 +343,7 @@ def aviso_pendencia():
     st.error("Você deixou o Código Localizador (PNR) como pendente.")
     st.write("Recomendamos que você retorne e preencha essa informação antes de prosseguir para o pagamento, pois a petição ficará incompleta e o juizado pode exigir esse dado posteriormente.")
     if st.button("Voltar e Preencher (Recomendado)", type="primary", use_container_width=True):
-        ir_para_etapa(2)
+        voltar_etapa(2)
 
 if st.session_state.etapa == "loading":
     st.markdown("""
@@ -413,7 +417,7 @@ elif st.session_state.etapa == 1:
             st.session_state.email = email.strip()
             st.session_state.cia_simples = cia_selecionada
             st.session_state.cia_completa = CIAS_MAPPING[cia_selecionada]
-            ir_para_etapa(2)
+            avancar_etapa(2)
 
 elif st.session_state.etapa == 2:
     primeiro_nome = st.session_state.get('primeiro_nome', 'Visitante')
@@ -513,7 +517,7 @@ elif st.session_state.etapa == 2:
     col_b1, col_b2 = st.columns(2)
     with col_b1:
         if st.button("⬅️ Voltar", use_container_width=True):
-            ir_para_etapa(1)
+            voltar_etapa(1)
     with col_b2:
         if st.button("Continuar para Pré-visualização ➡️", type="primary", use_container_width=True):
             origem_valida = origem.strip() if origem_sel == "Outro / Não listado" else origem
@@ -537,8 +541,7 @@ elif st.session_state.etapa == 2:
                 st.error(f"❌ Não é possível prosseguir. O prazo limite legal de {limite_texto} para requerer esta indenização já expirou.")
             else:
                 st.session_state.endereco = endereco
-                # Armazena estritamente a variável bruta
-                st.session_state.cpf = re.sub(r'\D', '', cpf_input) 
+                st.session_state.cpf = re.sub(r'\D', '', cpf_input)
                 st.session_state.uf = uf
                 st.session_state.nao_lembro_dados = st.session_state.checked_nao_lembro
                 st.session_state.pnr = pnr
@@ -556,11 +559,11 @@ elif st.session_state.etapa == 2:
                 st.session_state.aeroportos_conexao = aeroportos_conexao
                 st.session_state.conexoes_info = conexoes_info
                 st.session_state.relato_danos = relato_danos
-                ir_para_etapa(3)
+                avancar_etapa(3)
 
 elif st.session_state.etapa == 3:
     if st.button("⬅️ Corrigir Dados"):
-        ir_para_etapa(2)
+        voltar_etapa(2)
 
     primeiro_nome = st.session_state.get('primeiro_nome', 'Visitante')
     st.title("Pré-visualização da sua Petição")
@@ -571,7 +574,7 @@ elif st.session_state.etapa == 3:
     pnr_html = f'<span style="color: red;">{pnr_val}</span>' if pnr_val == "PENDENTE_USUARIO" else pnr_val
     num_voo_val = st.session_state.get('num_voo', '')
     num_voo_html = f" (Voo {num_voo_val})" if num_voo_val else ""
-    cpf_formatado = formatar_cpf(st.session_state.cpf)
+    cpf_formatado = formatar_cpf(st.session_state.get('cpf', ''))
 
     st.markdown(f"""
     <div class="doc-container">
@@ -593,17 +596,17 @@ elif st.session_state.etapa == 3:
     col_b1, col_b2 = st.columns(2)
     with col_b1:
         if st.button("⬅️ Voltar para Edição", use_container_width=True):
-            ir_para_etapa(2)
+            voltar_etapa(2)
     with col_b2:
         if st.button("Continuar para Finalização", type="primary", use_container_width=True):
             if st.session_state.pnr == "PENDENTE_USUARIO":
                 aviso_pendencia()
             else:
-                ir_para_etapa(4)
+                avancar_etapa(4)
 
 elif st.session_state.etapa == 4:
     if st.button("⬅️ Voltar para Visualização"):
-        ir_para_etapa(3)
+        voltar_etapa(3)
         
     st.title("Liberação do seu Documento")
 
@@ -635,7 +638,7 @@ elif st.session_state.etapa == 4:
         st.success("🎉 Pagamento Confirmado com Sucesso!")
         st.info(f"Uma cópia de segurança da sua petição também foi encaminhada para o e-mail cadastrado: **{st.session_state.email}**.")
 
-        cpf_formatado = formatar_cpf(st.session_state.cpf)
+        cpf_formatado = formatar_cpf(st.session_state.get('cpf', ''))
         pdf_bytes = gerar_pdf(
             st.session_state.uf, 
             st.session_state.nome, 
