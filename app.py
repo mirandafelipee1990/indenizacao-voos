@@ -8,7 +8,7 @@ import streamlit.components.v1 as components
 # Configuração da página
 st.set_page_config(
     page_title="Resolfix - Indenização de Voos",
-    page_layout="centered",
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
@@ -124,7 +124,6 @@ st.markdown("""
 <div id="top-anchor"></div>
 """, unsafe_allow_html=True)
 
-# Função para rolar para o topo automaticamente via JS
 def scroll_to_top():
     components.html(
         """
@@ -135,7 +134,6 @@ def scroll_to_top():
         height=0,
     )
 
-# --- DICIONÁRIOS E DADOS[span_0](start_span)[span_0](end_span) ---
 LINKS_TJ = {
     "AC": "https://www.tjac.jus.br", "AL": "https://www.tjal.jus.br", "AP": "https://www.tjap.jus.br",
     "AM": "https://www.tjam.jus.br", "BA": "https://www.tjba.jus.br", "CE": "https://www.tjce.jus.br",
@@ -194,7 +192,7 @@ AEROPORTOS_NACIONAIS = [
 ]
 
 AEROPORTOS_INTERNACIONAIS = AEROPORTOS_NACIONAIS[:-1] + [
-    "Portugal Lisboa (LIS)", "Portugal Porto (Opo)",
+    "Portugal Lisboa (LIS)", "Portugal Porto (OPO)",
     "Estados Unidos Miami (MIA)", "Estados Unidos Nova York (JFK)",
     "Estados Unidos Orlando (MCO)", "Argentina Buenos Aires (EZE)",
     "França Paris (CDG)", "Espanha Madri (MAD)", "Chile Santiago (SCL)",
@@ -248,7 +246,7 @@ def gerar_pdf(uf, nome, cpf, endereco, cia_completa, pnr, num_voo, trecho, data_
     pdf.set_font("Arial", 'B', 10)
     pdf.multi_cell(0, 5, txt("II - DO DIREITO"), align="L")
     pdf.set_font("Arial", '', 10)
-    direito = ("A relação jurídica estabelecida submete-se às regras protetivas do Código de Defesa do Consumidor (Lei nº 8.078/90) e legislação complementar aplicável à espécie. A responsabilidade da companhia aérea é objetiva, respondendo pelos danos causados aos consumidores independentemente da existência de culpa, nos termos do art. 14 do referido diploma legal.\n\n"
+    direito = ("A relação jurídica estabelecida submete-se às regras protetivas do Código de Defesa do Consumidor (Lei nº 8.078/90) e legislação complementar aplicável à espécie. A responsabilidade da companhia aérea é objetiva, respondendo pelos danos casados aos consumidores independentemente da existência de culpa, nos termos do art. 14 do referido diploma legal.\n\n"
                "Ademais, a jurisprudência pacífica dos Tribunais consolidou o entendimento de que o dano moral decorrente de falha grave no transporte aéreo opera-se in re ipsa, dispensando a comprovação de efetivo sofrimento psicológico, bastando a demonstração do descaso e do transtorno suportado.")
     pdf.multi_cell(0, 5, txt(direito), align="J")
     pdf.ln(4)
@@ -292,7 +290,6 @@ def mostrar_privacidade():
     if st.button("Fechar", use_container_width=True):
         st.rerun()
 
-# Inicialização de estados[span_1](start_span)[span_1](end_span)
 if 'etapa' not in st.session_state:
     st.session_state.etapa = 1
 if 'target_etapa' not in st.session_state:
@@ -303,7 +300,6 @@ def ir_para_etapa(destino):
     st.session_state.etapa = "loading"
     st.rerun()
 
-# --- TELA DE LOADING ---
 if st.session_state.etapa == "loading":
     st.markdown("""
     <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: sans-serif;">
@@ -322,7 +318,6 @@ if st.session_state.etapa == "loading":
     scroll_to_top()
     st.rerun()
 
-# --- ETAPA 1: CAPTAÇÃO BASEADA NA DOR[span_2](start_span)[span_2](end_span) ---
 elif st.session_state.etapa == 1:
     st.markdown("""
     <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 35px; border-radius: 16px; color: white; margin-bottom: 20px;">
@@ -355,7 +350,7 @@ elif st.session_state.etapa == 1:
     if 'cia_simples' in st.session_state and st.session_state.cia_simples in CIAS_SIMPLES:
         index_cia = CIAS_SIMPLES.index(st.session_state.cia_simples)
         
-    cia_selecionada = st.selectbox("Companhia Aérea Responsável:", CIAS_SIMPLES, index=index_cia, placeholder="Selecione a companhia aérea...")[span_3](start_span)[span_3](end_span)
+    cia_selecionada = st.selectbox("Companhia Aérea Responsável:", CIAS_SIMPLES, index=index_cia, placeholder="Selecione a companhia aérea...")
     
     st.markdown("")
     if st.button("Descubra o quanto pode ganhar ➔", type="primary", use_container_width=True):
@@ -374,7 +369,6 @@ elif st.session_state.etapa == 1:
             st.session_state.cia_completa = CIAS_MAPPING[cia_selecionada]
             ir_para_etapa(2)
 
-# --- ETAPA 2: ROTA, CONEXÕES E DADOS DO VOO[span_4](start_span)[span_4](end_span) ---
 elif st.session_state.etapa == 2:
     primeiro_nome = st.session_state.get('primeiro_nome', 'Visitante')
     st.title(f"Agora, {primeiro_nome}, precisamos dos detalhes da sua rota")
@@ -385,7 +379,7 @@ elif st.session_state.etapa == 2:
     index_estado = None
     if 'uf' in st.session_state and st.session_state.uf in ESTADOS:
         index_estado = ESTADOS.index(st.session_state.uf)
-    uf = st.selectbox("Selecione seu Estado (UF) para protocolo:", ESTADOS, index=index_estado, placeholder="Selecione o estado (UF)...")[span_5](start_span)[span_5](end_span)
+    uf = st.selectbox("Selecione seu Estado (UF) para protocolo:", ESTADOS, index=index_estado, placeholder="Selecione o estado (UF)...")
     
     tipo_voo = st.radio("Tipo de Voo:", ["Nacional", "Internacional"], horizontal=True, index=0 if st.session_state.get('tipo_voo', 'Nacional') == 'Nacional' else 1)
     lista_aeroportos = AEROPORTOS_NACIONAIS if tipo_voo == "Nacional" else AEROPORTOS_INTERNACIONAIS
@@ -414,200 +408,4 @@ elif st.session_state.etapa == 2:
     if 'checked_nao_lembro' not in st.session_state:
         st.session_state.checked_nao_lembro = False
         
-    pnr_input_val = st.session_state.get('pnr_input', '')
-    if pnr_input_val and pnr_input_val != "PENDENTE_USUARIO":
-        st.session_state.checked_nao_lembro = False
-        
-    col_v1, col_v2 = st.columns(2)
-    with col_v1:
-        label_pnr = "Código Localizador (PNR) - Pendente:" if st.session_state.checked_nao_lembro else "Código Localizador (PNR):"
-        pnr = st.text_input(label_pnr, max_chars=6, placeholder="Ex: XYZ123", key="pnr_input").upper()
-    with col_v2:
-        num_voo = st.text_input("Identificação do Voo Principal (Opcional):", placeholder="Ex: G3 1409", key="num_voo_input")
-        
-    checked_atual = st.checkbox("Não tenho o código PNR em mãos agora", value=st.session_state.checked_nao_lembro)
-    st.session_state.checked_nao_lembro = checked_atual
-    if st.session_state.checked_nao_lembro:
-        pnr = "PENDENTE_USUARIO"
-        num_voo = "PENDENTE"
-        st.info(f"Tudo bem, {primeiro_nome}! Você poderá atualizar esse dado posteriormente com o suporte ou na petição.")
-        
-    data_voo = st.date_input("Data do Voo:", max_value=date(2026, 7, 28), format="DD/MM/YYYY")
-    hoje = date(2026, 7, 28)
-    dias_passados = (hoje - data_voo).days
-    
-    prazo_valido = True
-    limite_texto = ""
-    if tipo_voo == "Nacional" and dias_passados > (5 * 365):
-        prazo_valido = False
-        limite_texto = "5 anos (Voo Nacional)"
-    elif tipo_voo == "Internacional" and dias_passados > (2 * 365):
-        prazo_valido = False
-        limite_texto = "2 anos (Voo Internacional)"
-        
-    col_b1, col_b2 = st.columns(2)
-    with col_b1:
-        if st.button("← Voltar", use_container_width=True):
-            ir_para_etapa(1)
-    with col_b2:
-        if st.button("Continuar para Pré-visualização ➔", type="primary", use_container_width=True):
-            origem_valida = origem.strip() if origem_sel == "Outro / Não listado" else (origem_sel if origem_sel else "")
-            destino_valida = destino.strip() if destino_sel == "Outro / Não listado" else (destino_sel if destino_sel else "")
-            
-            if not endereco or len(re.sub(r'\D', '', cpf_input)) != 11:
-                st.error("Por favor, preencha o endereço completo e um CPF válido com 11 dígitos.")
-            elif not uf:
-                st.error("Por favor, selecione o Estado (UF) para protocolo.")
-            elif not origem_sel:
-                st.error("Por favor, selecione o aeroporto de origem.")
-            elif not destino_sel:
-                st.error("Por favor, selecione o aeroporto de destino final.")
-            elif not st.session_state.checked_nao_lembro and len(pnr) != 6:
-                st.error("Preencha o Código Localizador (PNR) com exatamente 6 dígitos, ou marque a opção de que não possui o código em mãos.")
-            elif not origem_valida or not destino_valida:
-                st.error("Preencha os aeroportos de origem e destino.")
-            elif origem_valida == destino_valida:
-                st.error("A origem e o destino não podem ser iguais.")
-            elif not prazo_valido:
-                st.error(f"Não é possível prosseguir. O prazo limite legal de {limite_texto} para requerer esta indenização já expirou.")
-            else:
-                st.session_state.endereco = endereco
-                st.session_state.cpf = formatar_cpf(cpf_input)
-                st.session_state.uf = uf
-                st.session_state.nao_lembro_dados = st.session_state.checked_nao_lembro
-                st.session_state.pnr = pnr
-                st.session_state.num_voo = num_voo.strip()
-                st.session_state.origem_sel = origem_sel
-                st.session_state.destino_sel = destino_sel
-                st.session_state.origem_custom = origem if origem_sel == "Outro / Não listado" else ""
-                st.session_state.destino_custom = destino if destino_sel == "Outro / Não listado" else ""
-                st.session_state.origem = origem_valida
-                st.session_state.destino = destino_valida
-                st.session_state.trecho = f"{origem_valida} até {destino_valida}"
-                st.session_state.data_voo_br = data_voo.strftime("%d/%m/%Y")
-                st.session_state.tipo_voo = tipo_voo
-                ir_para_etapa(3)
-
-# --- ETAPA 3: VISUALIZAÇÃO PRÉVIA[span_6](start_span)[span_6](end_span) ---
-elif st.session_state.etapa == 3:
-    primeiro_nome = st.session_state.get('primeiro_nome', 'Visitante')
-    st.title("Pré-visualização da sua Petição")
-    st.info(f"{primeiro_nome}, confira os dados estruturados abaixo. A fundamentação legal completa será liberada na finalização.")
-    
-    uf_extenso_preview = ESTADOS_TEXTO.get(st.session_state.uf, f"DO ESTADO DE {st.session_state.uf}")
-    pnr_val = st.session_state.pnr
-    pnr_html = f'<span style="color: red;">{pnr_val}</span>' if pnr_val == "PENDENTE_USUARIO" else pnr_val
-    num_voo_val = st.session_state.get('num_voo', '')
-    num_voo_html = f" (Voo {num_voo_val})" if num_voo_val and num_voo_val != "PENDENTE" else ""
-    
-    st.markdown(f"""
-    <div class="doc-container">
-        <div class="doc-header">
-            EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DO JUIZADO ESPECIAL CÍVEL DA COMARCA {uf_extenso_preview}
-        </div>
-        <p><b>REQUERENTE:</b> {st.session_state.nome.upper()}, portador(a) do CPF nº {st.session_state.cpf}, residente e domiciliado(a) em {st.session_state.endereco}. E-mail: {st.session_state.email}.</p>
-        <p align="center"><b>AÇÃO DE INDENIZAÇÃO POR DANOS MORAIS E MATERIAIS</b></p>
-        <p><b>REQUERIDO:</b> {st.session_state.cia_completa.upper()}, pessoa jurídica de direito privado...</p>
-        <p><b>I - DOS FATOS</b><br>
-        O(A) requerente adquiriu bilhetes aéreos sob o código localizador {pnr_html}{num_voo_html}, para o trecho entre {st.session_state.trecho} ({st.session_state.tipo_voo}), com data marcada para {st.session_state.data_voo_br}. Incidente registrado: {st.session_state.problema}. Ocorre que a empresa falhou gravemente na prestação do serviço...</p>
-        <p><b>II - DO DIREITO</b></p>
-        <p class="blur-text">
-            A relação jurídica submete-se às regras do Código de Defesa do Consumidor. A responsabilidade da companhia aérea é objetiva nos termos do artigo 14 da Lei 8078/90. O dano moral ocorre in re ipsa configurando quebra das resoluções da ANAC aplicáveis à espécie e jurisprudência pacífica do STJ.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col_b1, col_b2 = st.columns(2)
-    with col_b1:
-        if st.button("← Voltar para Edição", use_container_width=True):
-            ir_para_etapa(2)
-    with col_b2:
-        if st.button("Continuar para Finalização ➔", type="primary", use_container_width=True):
-            ir_para_etapa(4)
-
-# --- ETAPA 4: PAGAMENTO E ENTREGA[span_7](start_span)[span_7](end_span) ---
-elif st.session_state.etapa == 4:
-    st.title("Liberação do seu Documento")
-    
-    if 'pagamento_aprovado' not in st.session_state:
-        st.session_state.pagamento_aprovado = False
-        
-    if not st.session_state.pagamento_aprovado:
-        st.markdown(f"""
-        <div class="highlight-box">
-            <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 18px; font-weight: 700;">Fique com 100% da sua indenização</h3>
-            <p style="margin: 0; font-size: 14px; line-height: 1.5;">Advogados e intermediários cobram até 30% do que você ganha no tribunal. Com a petição pronta, você mesmo protocola em minutos e coloca todo o valor no bolso, sem dor de cabeça.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.link_button("Liberar Meu Documento Agora (R$ 56,90)", "https://link-do-mercado-pago.com", type="primary", use_container_width=True)
-        
-        st.markdown("---")
-        st.write("**Ambiente de Teste:**")
-        if st.button("Simular Pagamento Aprovado (Bypass de Teste)"):
-            st.session_state.pagamento_aprovado = True
-            st.rerun()
-            
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("← Voltar para Visualización", use_container_width=True):
-            ir_para_etapa(3)
-    else:
-        st.success("Pagamento Confirmado com Sucesso!")
-        st.info(f"Uma cópia de segurança da sua petição também foi encaminhada para o e-mail cadastrado: **{st.session_state.email}**.")
-        
-        pdf_bytes = gerar_pdf(
-            st.session_state.uf,
-            st.session_state.nome,
-            st.session_state.cpf,
-            st.session_state.endereco,
-            st.session_state.cia_completa,
-            st.session_state.pnr,
-            st.session_state.get('num_voo', ''),
-            st.session_state.trecho,
-            st.session_state.data_voo_br,
-            st.session_state.tipo_voo,
-            st.session_state.problema
-        )
-        
-        st.download_button(
-            label="📥 Baixar Minha Petição Oficial (PDF)",
-            data=pdf_bytes,
-            file_name=f"peticao_atraso_voo_{st.session_state.pnr}.pdf",
-            mime="application/pdf",
-            type="primary"
-        )
-        
-        st.markdown("---")
-        st.subheader("Roteiro Prático: Como Resolver seu Problema Agora")
-        st.markdown(f"""
-        Como o valor padrão pedido é de R$ 10.000,00 (abaixo de 20 salários mínimos), **você não precisa de advogado**.
-        Siga o processo passo a passo:
-        1. **Baixe o PDF** no botão acima (ou confira seu e-mail).
-        2. **Separe seus Documentos:** Tire foto ou salve em PDF o seu RG/CPF, Comprovante de Residência e o seu Cartão de Embarque/E-ticket.
-        3. **Acesse o Tribunal:** Clique no botão oficial abaixo correspondente ao seu estado (**TJ{st.session_state.uf}**).
-        4. **Cadastre-se e Envie:** Entre usando sua conta do **Gov.br**, selecione 'Ajuizamento de Causa Própria' (ou Atermação Online) e anexe esta Petição junto com seus documentos.
-        """)
-        
-        link_do_tribunal = LINKS_TJ.get(st.session_state.uf, "https://www.tjsp.jus.br")
-        st.link_button(f"🏛️ Protocolar Petição no Portal do TJ{st.session_state.uf}", link_do_tribunal)
-        
-        st.markdown("""
-        *Dica Alternativa Express: Você também pode simplesmente copiar os trechos dos 'Fatos' da sua petição e abrir uma reclamação direta no portal **Consumidor.gov.br**. As companhias costumam fazer propostas de acordo em dinheiro lá em até 10 dias úteis para evitar o processo judicial.*
-        """)
-
-# --- BOTÕES FLUTUANTES COMPACTOS DUPLOS (WhatsApp & Topo) ---
-st.markdown("""
-<a href="#top-anchor" class="back-to-top">⬆ Topo</a>
-<a href="https://wa.me/5500000000000?text=Olá,%20preciso%20de%20ajuda%20com%20a%20minha%20petição%20de%20voo." target="_blank" class="whatsapp-float">💬 Suporte</a>
-""", unsafe_allow_html=True)
-
-st.markdown("---")
-col_footer1, col_footer2, col_footer3 = st.columns(3)
-with col_footer1:
-    if st.button("Termos de Uso", key="link_termos", use_container_width=True):
-        mostrar_termos()
-with col_footer2:
-    if st.button("Política de Privacidade", key="link_priv", use_container_width=True):
-        mostrar_privacidade()
-with col_footer3:
-    st.markdown("<p style='text-align: center; color: gray; font-size: 12px;'>© 2026 Resolfix</p>", unsafe_allow_html=True)
+  
