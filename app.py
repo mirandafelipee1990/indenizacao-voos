@@ -1,3 +1,326 @@
+import streamlit as st
+import time
+import re
+import locale
+from datetime import date
+from fpdf import FPDF
+
+try:
+    locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+except:
+    try:
+        locale.setlocale(locale.LC_TIME, 'Portuguese_Brazil.1252')
+    except:
+        pass
+
+st.set_page_config(
+    page_title="Resolfix - Notificação Extrajudicial de Voo",
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
+
+st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 750px;
+    }
+    div.stButton > button[kind="primary"] {
+        background-color: #16a34a !important;
+        border-color: #16a34a !important;
+        color: white !important;
+    }
+    div.stButton > button[kind="primary"]:hover {
+        background-color: #15803d !important;
+        border-color: #15803d !important;
+    }
+    div[data-testid="stLinkButton"] > a {
+        background-color: #16a34a !important;
+        border-color: #16a34a !important;
+        color: white !important;
+        text-decoration: none !important;
+    }
+    div[data-testid="stLinkButton"] > a:hover {
+        background-color: #15803d !important;
+        border-color: #15803d !important;
+    }
+    @keyframes pulse-slow {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.03); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    .pulsing-text {
+        display: inline-block;
+        animation: pulse-slow 2s infinite ease-in-out;
+    }
+    .doc-container {
+        font-family: "Times New Roman", Times, serif;
+        font-size: 14px;
+        background-color: #FFFFFF;
+        color: #000000;
+        padding: 40px;
+        border: 2px solid #333333;
+        outline: 4px solid #f0f2f6;
+        box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
+        margin-top: 20px;
+        margin-bottom: 20px;
+        border-radius: 2px;
+        line-height: 1.6;
+        text-align: justify;
+    }
+    .doc-header {
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 40px;
+    }
+    .blur-text {
+        color: transparent;
+        text-shadow: 0 0 8px rgba(0,0,0,0.7);
+        user-select: none;
+    }
+    .highlight-box {
+        border-left: 5px solid #16a34a;
+        background-color: #f0f2f6;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        color: #1e293b !important;
+    }
+    .highlight-box h3, .highlight-box p, .highlight-box span {
+        color: #1e293b !important;
+    }
+    .whatsapp-float {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        background-color: #25d366;
+        color: white !important;
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        text-align: center;
+        box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+        z-index: 9999;
+        text-decoration: none !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .whatsapp-float:hover {
+        background-color: #128c7e !important;
+        color: white !important;
+    }
+    .scroll-top-float {
+        position: fixed;
+        bottom: 90px;
+        right: 25px;
+        background-color: #1e293b;
+        color: white !important;
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        text-align: center;
+        box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+        z-index: 9999;
+        text-decoration: none !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    .scroll-top-float:hover {
+        background-color: #0f172a !important;
+    }
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 1.75rem !important;
+            line-height: 1.2 !important;
+        }
+        h2 {
+            font-size: 1.4rem !important;
+            line-height: 1.2 !important;
+        }
+        .block-container {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+    }
+    </style>
+    <a href="#" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;" class="scroll-top-float" title="Voltar ao Topo">⬆️</a>
+    <a href="https://wa.me/556281096811?text=Olá,%20estou%20no%20site%20Resolfix%20e%20preciso%20de%20ajuda." target="_blank" class="whatsapp-float" title="Suporte WhatsApp">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.601 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.558 6.558 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.193-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.012-.304.088-.403.087-.088.197-.232.296-.348.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34l-.38-.008c-.133 0-.348.048-.53.247-.182.198-.694.678-.694 1.654 0 .976.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.078.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+        </svg>
+    </a>
+""", unsafe_allow_html=True)
+
+LINKS_TJ = {
+    "AC": "https://www.tjac.jus.br", "AL": "https://www.tjal.jus.br", "AP": "https://www.tjap.jus.br",
+    "AM": "https://www.tjam.jus.br", "BA": "https://www.tjba.jus.br", "CE": "https://www.tjce.jus.br",
+    "DF": "https://www.tjdft.jus.br", "ES": "https://www.tjes.jus.br", "GO": "https://www.tjgo.jus.br",
+    "MA": "https://www.tjma.jus.br", "MT": "https://www.tjmt.jus.br", "MS": "https://www.tjms.jus.br",
+    "MG": "https://www.tjmg.jus.br", "PA": "https://www.tjpa.jus.br", "PB": "https://www.tjpb.jus.br",
+    "PR": "https://www.tjpr.jus.br", "PE": "https://www.tjpe.jus.br", "PI": "https://www.tjpi.jus.br",
+    "RJ": "https://www.tjrj.jus.br", "RN": "https://www.tjrn.jus.br", "RS": "https://www.tjrs.jus.br",
+    "RO": "https://www.tjro.jus.br", "RR": "https://www.tjrr.jus.br", "SC": "https://www.tjsc.jus.br",
+    "SP": "https://www.tjsp.jus.br", "SE": "https://www.tjse.jus.br", "TO": "https://www.tjto.jus.br"
+}
+ESTADOS = list(LINKS_TJ.keys())
+
+ESTADOS_TEXTO = {
+    "AC": "DO ESTADO DO ACRE", "AL": "DO ESTADO DE ALAGOAS", "AP": "DO ESTADO DO AMAPÁ",
+    "AM": "DO ESTADO DO AMAZONAS", "BA": "DO ESTADO DA BAHIA", "CE": "DO ESTADO DO CEARÁ",
+    "DF": "DO DISTRITO FEDERAL", "ES": "DO ESTADO DO ESPÍRITO SANTO", "GO": "DO ESTADO DE GOIÁS",
+    "MA": "DO ESTADO DO MARANHÃO", "MT": "DO ESTADO DE MATO GROSSO", "MS": "DO ESTADO DE MATO GROSSO DO SUL",
+    "MG": "DO ESTADO DE MINAS GERAIS", "PA": "DO ESTADO DO PARÁ", "PB": "DO ESTADO DA PARAÍBA",
+    "PR": "DO ESTADO DO PARANÁ", "PE": "DO ESTADO DE PERNAMBUCO", "PI": "DO ESTADO DO PIAUÍ",
+    "RJ": "DO ESTADO DO RIO DE JANEIRO", "RN": "DO ESTADO DO RIO GRANDE DO NORTE", "RS": "DO ESTADO DO RIO GRANDE DO SUL",
+    "RO": "DO ESTADO DE RONDÔNIA", "RR": "DO ESTADO DE RORAIMA", "SC": "DO ESTADO DE SANTA CATARINA",
+    "SP": "DO ESTADO DE SÃO PAULO", "SE": "DO ESTADO DE SERGIPE", "TO": "DO ESTADO DO TOCANTINS"
+}
+
+CIAS_MAPPING = {
+    "LATAM": "LATAM Airlines Brasil", "GOL": "GOL Linhas Aéreas S.A.",
+    "Azul": "Azul Linhas Aéreas Brasileiras S.A.", "Voepass": "Voepass Linhas Aéreas",
+    "TAP": "TAP Air Portugal", "American Airlines": "American Airlines Inc.",
+    "United Airlines": "United Airlines Inc.", "Delta": "Delta Air Lines Inc.",
+    "Copa Airlines": "Compañía Panameña de Aviación S.A.", "Air France": "Air France",
+    "KLM": "KLM Royal Dutch Airlines", "Aerolíneas Argentinas": "Aerolíneas Argentinas S.A.",
+    "Emirates": "Emirates Airlines", "Qatar": "Qatar Airways", "Outra": "Outra"
+}
+CIAS_SIMPLES = list(CIAS_MAPPING.keys())
+
+AEROPORTOS_NACIONAIS = [
+    "São Paulo - Congonhas (CGH)", "São Paulo - Guarulhos (GRU)",
+    "São Paulo - Viracopos / Campinas (VCP)", "Rio de Janeiro - Santos Dumont (SDU)",
+    "Rio de Janeiro - Galeão (GIG)", "Belo Horizonte - Confins (CNF)",
+    "Brasília - Presidente Juscelino Kubitschek (BSB)", "Salvador - Deputado Luís Eduardo Magalhães (SSA)",
+    "Fortaleza - Pinto Martins (FOR)", "Recife - Guararapes (REC)",
+    "Curitiba - Afonso Pena (CWB)", "Porto Alegre - Salgado Filho (POA)",
+    "Goiânia - Santa Genoveva (GYN)", "Florianópolis - Hercílio Luz (FLN)",
+    "Vitória - Eurico de Aguiar Salles (VIX)", "Manaus - Eduardo Gomes (MAO)",
+    "Belém - Val-de-Cans (BEL)", "Cuiabá - Marechal Rondon (CGB)",
+    "Campo Grande (CGR)", "Maceió - Zumbi dos Palmares (MCZ)",
+    "Aracaju - Santa Maria (AJU)", "Natal - Governador Aluízio Alves (NAT)",
+    "João Pessoa - Presidente Castro Pinto (JPA)", "São Luís - Marechal Cunha Machado (SLZ)",
+    "Teresina - Senador Petrônio Portella (THE)", "Palmas - Lysias Rodrigues (PMW)",
+    "Porto Velho - Governador Jorge Teixeira (PVH)", "Rio Branco - Plácido de Castro (RBR)",
+    "Macapá - Alberto Alcolumbre (MCP)", "Boa Vista - Atlas Brasil Cantanhede (BVB)",
+    "Outro / Não listado"
+]
+
+AEROPORTOS_INTERNACIONAIS = AEROPORTOS_NACIONAIS[:-1] + [
+    "Portugal - Lisboa (LIS)", "Portugal - Porto (OPO)",
+    "Estados Unidos - Miami (MIA)", "Estados Unidos - Nova York (JFK)",
+    "Estados Unidos - Orlando (MCO)", "Argentina - Buenos Aires (EZE)",
+    "França - Paris (CDG)", "Espanha - Madri (MAD)",
+    "Chile - Santiago (SCL)", "Itália - Roma (FCO)",
+    "Outro / Não listado"
+]
+
+def formatar_cpf(cpf_string):
+    cpf_numeros = re.sub(r'\D', '', cpf_string)
+    if len(cpf_numeros) == 11:
+        return f"{cpf_numeros[:3]}.{cpf_numeros[3:6]}.{cpf_numeros[6:9]}-{cpf_numeros[9:]}"
+    return cpf_string
+
+def gerar_pdf(uf, nome, cpf, endereco, cia_completa, pnr, num_voo, trecho, data_voo_br, tipo_voo, problema, relato_usuario, conexoes_info):
+    pdf = FPDF()
+    pdf.add_page()
+    
+    def txt(texto):
+        return str(texto).encode('latin-1', 'replace').decode('latin-1')
+        
+    uf_texto = ESTADOS_TEXTO.get(uf, f"DO ESTADO DE {uf}")
+    pdf.set_font("Arial", 'B', 12)
+    pdf.multi_cell(0, 6, txt(f"EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DO JUIZADO ESPECIAL CÍVEL DA COMARCA {uf_texto}"), align="C")
+    pdf.ln(8)
+    
+    pdf.set_font("Arial", '', 10)
+    qualificacao = f"{nome.upper()}, portador(a) do CPF nº {cpf}, residente e domiciliado(a) em {endereco}, vem, respeitosamente, à presença de Vossa Excelência, propor a presente:"
+    pdf.multi_cell(0, 5, txt(qualificacao), align="J")
+    pdf.ln(4)
+    
+    pdf.set_font("Arial", 'B', 11)
+    pdf.multi_cell(0, 5, txt("AÇÃO DE INDENIZAÇÃO POR DANOS MORAIS E MATERIAIS"), align="C")
+    pdf.ln(4)
+    
+    pdf.set_font("Arial", '', 10)
+    em_face = f"Em face de {cia_completa.upper()}, pessoa jurídica de direito privado, pelos fatos e fundamentos jurídicos a seguir expostos:"
+    pdf.multi_cell(0, 5, txt(em_face), align="J")
+    pdf.ln(4)
+    
+    pdf.set_font("Arial", 'B', 10)
+    pdf.multi_cell(0, 5, txt("I - DOS FATOS"), align="L")
+    pdf.set_font("Arial", '', 10)
+    
+    trecho_voo_str = f" (Voo {num_voo})" if num_voo and num_voo != "PENDENTE_USUARIO" else ""
+    pnr_str = "pendente" if pnr == "PENDENTE_USUARIO" else f"código localizador {pnr}"
+    
+    relato_base = relato_usuario.strip() if relato_usuario and len(relato_usuario.strip()) > 5 else "O(A) requerente sofreu graves transtornos decorrentes de falha na prestação do serviço aéreo, com atraso superior a 4 horas e ausência de assistência material adequada."
+    
+    fatos = (f"O(A) requerente adquiriu bilhetes aéreos sob o {pnr_str}{trecho_voo_str}, para o trecho entre {trecho} ({tipo_voo}), com data prevista para o voo em {data_voo_br}.\n\n"
+             f"{conexoes_info}"
+             f"Ocorre que, na data aprazada, a empresa requerida falhou na prestação do serviço contratado, incorrendo em {problema.lower()} da viagem. Detalhes do ocorrido: \"{relato_base}\". Destaca-se que a empresa não prestou a devida assistência material (alimentos, comunicação e hospedagem), em afronta direta às normativas da ANAC.\n\n"
+             f"Tal falha ultrapassa o mero aborrecimento cotidiano, causando severos transtornos, angústia e abalo emocional ao(à) requerente, que teve sua rotina abruptamente desorganizada por ato exclusivo da companhia aérea.")
+    
+    pdf.multi_cell(0, 5, txt(fatos), align="J")
+    pdf.ln(4)
+    
+    pdf.set_font("Arial", 'B', 10)
+    pdf.multi_cell(0, 5, txt("II - DO DIREITO"), align="L")
+    pdf.set_font("Arial", '', 10)
+    direito = ("A relação jurídica estabelecida submete-se às regras protetivas do Código de Defesa do Consumidor (Lei nº 8.078/90) e legislação complementar aplicável à espécie. A responsabilidade da companhia aérea é objetiva, respondendo pelos danos causados aos consumidores independentemente da existência de culpa, nos termos do art. 14 do referido diploma legal.\n\n"
+               "Ademais, a jurisprudência pacífica dos Tribunais e as resoluções da ANAC consolidaram o entendimento de que atrasos superiores a 4 horas ou cancelamentos sem aviso prévio geram direito à reacomodação e configuram dano moral in re ipsa, dispensando a comprovação de efetivo sofrimento psicológico, bastando a demonstração do descaso e do transtorno suportado.")
+    pdf.multi_cell(0, 5, txt(direito), align="J")
+    pdf.ln(4)
+    
+    pdf.set_font("Arial", 'B', 10)
+    pdf.multi_cell(0, 5, txt("III - DOS PEDIDOS"), align="L")
+    pdf.set_font("Arial", '', 10)
+    pedidos = ("Diante do exposto, requer a Vossa Excelência:\n"
+               "a) A citação da empresa ré para, querendo, contestar a presente ação sob pena de revelia;\n"
+               "b) A procedência total da ação para condenar a requerida ao pagamento de indenização por danos morais no valor de R$ 10.000,00 (dez mil reais);\n"
+               "c) A concessão dos benefícios da justiça gratuita, por ser o(a) requerente hipossuficiente.\n\n"
+               f"Dá-se à causa o valor de R$ 10.000,00.\n\n"
+               "Termos em que,\nPede deferimento.\n\n"
+               f"{uf}, {data_voo_br}.\n\n"
+               f"___________________________________\n{nome.upper()}")
+    pdf.multi_cell(0, 5, txt(pedidos), align="J")
+    
+    return bytes(pdf.output(dest='S'), encoding='latin-1')
+
+@st.dialog("Termos e Condições de Uso")
+def mostrar_termos():
+    st.markdown("""
+    ### 1. Objeto da Plataforma
+    Este sistema tem caráter estritamente instrumental, auxiliando o usuário na formatação autônoma de documentos para protocolo no Juizado Especial Cível (JEC).
+    ### 2. Autonomia do Usuário
+    O usuário é integralmente responsável pelas informações fornecidas e pelo protocolo da petição perante o Tribunal competente. A plataforma não substitui a consultoria jurídica formal, atuando como ferramenta de autoatendimento.
+    ### 3. Responsabilidade sobre Prazos
+    Cabe ao usuário a conferência das datas e limites legais de prescrição aplicáveis ao seu caso específico.
+    """)
+    if st.button("Fechar", use_container_width=True):
+        st.rerun()
+
+@st.dialog("Política de Privacidade")
+def mostrar_privacidade():
+    st.markdown("""
+    ### 1. Coleta de Dados
+    Coletamos apenas os dados essenciais estritamente necessários para preenchimento da petição inicial e envio de comunicações transacionais (como e-mail e CPF).
+    ### 2. Armazenamento e Segurança
+    Os dados informados são processados em memória de sessão e não são comercializados ou compartilhados com terceiros para fins publicitários.
+    ### 3. Conformidade
+    Tratamento de dados alinhado aos princípios da Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+    """)
+    if st.button("Fechar", use_container_width=True):
+        st.rerun()
+
 if 'etapa' not in st.session_state:
     st.session_state.etapa = 1
 if 'target_etapa' not in st.session_state:
@@ -8,7 +331,6 @@ def ir_para_etapa(destino):
     st.session_state.etapa = "loading"
     st.rerun()
 
-# Item 4: Popup de Aviso de Pendência
 @st.dialog("⚠️ Atenção: Informação Pendente")
 def aviso_pendencia():
     st.error("Você deixou o Código Localizador (PNR) como pendente.")
@@ -96,7 +418,6 @@ elif st.session_state.etapa == 2:
 
     endereco = st.text_input("Endereço Residencial Completo:", placeholder="Rua, Número, Bairro, Cidade - CEP", value=st.session_state.get('endereco', ''))
     
-    # Item 2: Restrito a 11 caracteres para o CPF
     cpf_input = st.text_input("CPF (Apenas os números):", max_chars=11, placeholder="00000000000", value=st.session_state.get('cpf', ''))
     
     st.markdown("<p style='font-size: 14px; color: #64748b; margin-top: -10px; margin-bottom: 15px;'><span style='color: #16a34a;'>🔒</span> Dados protegidos pela LGPD (Lei nº 13.709/18) e utilizados exclusivamente para esta petição.</p>", unsafe_allow_html=True)
