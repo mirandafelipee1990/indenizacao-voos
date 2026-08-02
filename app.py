@@ -8,7 +8,10 @@ import os
 from datetime import date
 from fpdf import FPDF
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+try:
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+except Exception:
+    pass
 
 def formatar_relato_ia(relato):
     texto_padrao = "O(A) requerente sofreu graves transtornos decorrentes de falha na prestação do serviço aéreo, suportando descaso e ausência de assistência adequada por parte da companhia requerida, o que frustrou o planejamento de sua viagem e causou abalo moral."
@@ -26,7 +29,7 @@ def formatar_relato_ia(relato):
         2. **Incorporação da História:** Compreenda a essência e o contexto do relato do usuário (como perda de compromissos importantes, eventos familiares, reuniões ou frustração de expectativas) e integre essa narrativa de forma fluida, profissional e estruturada, dando o devido embasamento jurídico ao dano moral sofrido.
         3. **Correção e Polimento:** Corrija rigorosamente qualquer erro de ortografia, digitação (ex: corrigir "casaneto" para "casamento") ou gramática, elevando o vocabulário para o padrão culto e jurídico.
         4. **Concisão Estruturada:** Elabore um texto coeso de 1 a 2 parágrafos curtos, diretos e focados na falha da prestação do serviço e nas consequências práticas vividas pelo usuário.
-        5. **Fidelidade Factual Estrita:** Não invente dados técnicos que não foram fornecidos (como horários específicos, conexões adicionais ou valores em dinheiro). Atenha-se estritamente aos fatos e à narrativa emocional/prática que o usuário vivenciou.
+        5. **Fidelidade Factual Estrita:** Não invente dados técnicos que não foram fornecidos (como horários específicos, conexões adicionais ou valores em dinheiro). Atenha-se estritamente os fatos e à narrativa emocional/prática que o usuário vivenciou.
         6. **Fallback Inteligente:** Se o relato for totalmente vazio, vago ou irrelevante (ex: "foi ruim", "empresa péssima"), ignore-o e retorne EXATAMENTE esta frase padrão: "{texto_padrao}"
         7. **Formato de Saída:** Retorne APENAS o texto final pronto para inclusão na petição, sem aspas, sem formatação markdown e sem introduções explicativas.
 
@@ -36,7 +39,8 @@ def formatar_relato_ia(relato):
         texto_gerado = response.text.strip()
         
         return texto_gerado if texto_gerado else texto_padrao
-    except Exception:
+    except Exception as e:
+        st.error(f"⚠️ Erro na API do Gemini: {e}")
         return relato.strip()
 
 try:
