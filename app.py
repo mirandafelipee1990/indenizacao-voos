@@ -367,7 +367,7 @@ elif st.session_state.etapa == 1:
             avancar_etapa(2)
 
 elif st.session_state.etapa == 2:
-    st.title("Detalhes do Voo e Dados Pessoais")
+    st.title("Detalhes do Voo")
     st.markdown("Preencha as informações abaixo para a elaboração técnica da sua petição.")
 
     st.markdown("### Dados do Voo")
@@ -435,7 +435,7 @@ elif st.session_state.etapa == 2:
         st.info("💡 Tudo bem! Você poderá atualizar esse dado posteriormente com o suporte ou na petição.")
 
     st.markdown("---")
-    st.markdown("### Seus Dados Pessoais")
+    st.markdown("### Seus Dados")
     
     nome = st.text_input("Nome Completo:", placeholder="Digite seu nome completo", value=st.session_state.get('nome', ''))
     email = st.text_input("E-mail para envio da Petição:", placeholder="seu@email.com", value=st.session_state.get('email', ''))
@@ -490,8 +490,10 @@ elif st.session_state.etapa == 2:
                 st.error("Por favor, insira um e-mail válido.")
             elif not uf:
                 st.error("Por favor, selecione o Estado (UF) para protocolo.")
-            elif not endereco or len(re.sub(r'\D', '', cpf_input)) != 11:
-                st.error("Por favor, preencha o endereço completo e um CPF válido com 11 dígitos numéricos.")
+            elif not endereco:
+                st.error("Por favor, preencha o seu endereço completo.")
+            elif len(re.sub(r'\D', '', cpf_input)) != 11:
+                st.error("Por favor, insira um CPF válido com 11 dígitos numéricos.")
             else:
                 st.session_state.origem_sel = origem_sel
                 st.session_state.destino_sel = destino_sel
@@ -571,13 +573,13 @@ elif st.session_state.etapa == 4:
     if not st.session_state.pagamento_aprovado:
         st.markdown(f"""
         <div class="highlight-box">
-            <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 18px; font-weight: 700;">Fique com 100% da sua indenização</h3>
-            <p style="margin: 0; font-size: 14px; line-height: 1.5;">Advogados cobram até 30% do que você ganha. Com a petição pronta elaborada para o caso, você mesmo protocola em minutos e coloca todo o valor no bolso.</p>
+            <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 18px; font-weight: 700;">Maximize o valor da sua indenização</h3>
+            <p style="margin: 0; font-size: 14px; line-height: 1.5;">Advogados costumam cobrar até 30% do valor final. Com a petição estruturada com os fundamentos corretos, você mesmo faz o protocolo online em poucos minutos. Ações bem fundamentadas no Juizado Especial possuem um alto índice de acordos e procedência favorável ao consumidor, sem complicação.</p>
         </div>
         """, unsafe_allow_html=True)
 
         st.link_button(
-            "Elaboração de Notificação Extrajudicial de Voo - Resolfix (R$ 56,90)", 
+            "Liberar Minha Petição Agora - R$ 56,90", 
             "https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=TOKEN_MERCADO_PAGO_EXEMPLO", 
             type="primary", 
             use_container_width=True
