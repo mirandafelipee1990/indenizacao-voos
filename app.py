@@ -1,47 +1,11 @@
-import streamlit as st
+import streamlit as str
 import time
 import re
 import locale
 import mercadopago
-import google.generativeai as genai
 import os
 from datetime import date
 from fpdf import FPDF
-
-try:
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-except Exception:
-    pass
-
-def formatar_relato_ia(relato):
-    texto_padrao = "O(A) requerente sofreu graves transtornos decorrentes de falha na prestação do serviço aéreo, suportando descaso e ausência de assistência adequada por parte da companhia requerida, o que frustrou o planejamento de sua viagem e causou abalo moral."
-    
-    if not relato or len(relato.strip()) < 10:
-        return texto_padrao
-    
-    try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        prompt = f"""Atue como um redator jurídico sênior especializado em petições iniciais de direito do consumidor (aviação civil). 
-        Sua missão é transformar o relato livre e coloquial do usuário em um parágrafo de "DOS FATOS" coeso, persuasivo e tecnicamente adequado, incorporando a lógica e o contexto da história narrada pelo cliente.
-
-        Diretrizes essenciais:
-        1. **Voz e Perspectiva:** Reescreva estritamente em 3ª pessoa ('o requerente' ou 'a requerente').
-        2. **Incorporação da História:** Compreenda a essência e o contexto do relato do usuário (como perda de compromissos importantes, eventos familiares, reuniões ou frustração de expectativas) e integre essa narrativa de forma fluida, profissional e estruturada, dando o devido embasamento jurídico ao dano moral sofrido.
-        3. **Correção e Polimento:** Corrija rigorosamente qualquer erro de ortografia, digitação (ex: corrigir "casaneto" para "casamento") ou gramática, elevando o vocabulário para o padrão culto e jurídico.
-        4. **Concisão Estruturada:** Elabore um texto coeso de 1 a 2 parágrafos curtos, diretos e focados na falha da prestação do serviço e nas consequências práticas vividas pelo usuário.
-        5. **Fidelidade Factual Estrita:** Não invente dados técnicos que não foram fornecidos (como horários específicos, conexões adicionais ou valores em dinheiro). Atenha-se estritamente os fatos e à narrativa emocional/prática que o usuário vivenciou.
-        6. **Fallback Inteligente:** Se o relato for totalmente vazio, vago ou irrelevante (ex: "foi ruim", "empresa péssima"), ignore-o e retorne EXATAMENTE esta frase padrão: "{texto_padrao}"
-        7. **Formato de Saída:** Retorne APENAS o texto final pronto para inclusão na petição, sem aspas, sem formatação markdown e sem introduções explicativas.
-
-        Relato original do usuário: {relato}"""
-        
-        response = model.generate_content(prompt)
-        texto_gerado = response.text.strip()
-        
-        return texto_gerado if texto_gerado else texto_padrao
-    except Exception as e:
-        st.error(f"⚠️ Erro na API do Gemini: {e}")
-        return relato.strip()
 
 try:
     locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
@@ -215,13 +179,21 @@ AEROPORTOS_INTERNACIONAIS = AEROPORTOS_NACIONAIS[:-1] + [
     "Outro / Não listado"
 ]
 
+def obter_texto_fatos(problema):
+    if problema == "Voo Atrasado (mais de 4h)":
+        return "Ocorre que, na data aprazada, o voo contratado sofreu um atraso superior a 4 horas, deixando o(a) requerente aguardando no aeroporto por longo período sem a devida assistência material por parte da companhia aérea, em afronta direta às normativas da ANAC e do Código de Defesa do Consumidor."
+    elif problema == "Voo Cancelado":
+        return "Ocorre que, na data aprazada, a empresa requerida procedeu ao cancelamento imotivado da viagem, frustrando completamente o planejamento do(a) requerente e deixando-o(a) desamparado(a), sem o suporte material obrigatório ou reacomodação em tempo útil."
+    else:
+        return "Ocorre que, durante a execução do contrato de transporte, o(a) requerente enfrentou falhas graves na prestação do serviço com quebra de itinerário e perda de conexão, sem a assistência material adequada ou solução célere por parte da companhia aérea."
+
 def formatar_cpf(cpf_string):
     cpf_numeros = re.sub(r'\D', '', cpf_string)
     if len(cpf_numeros) == 11:
         return f"{cpf_numeros[:3]}.{cpf_numeros[3:6]}.{cpf_numeros[6:9]}-{cpf_numeros[9:]}"
     return cpf_string
 
-def gerar_pdf(uf, nome, cpf, endereco, cia_completa, pnr, num_voo, trecho, data_voo_br, tipo_voo, problema, relato_usuario, conexoes_info):
+def gerar_pdf(uf, nome, cpf, endereco, cia_completa, pnr, num_voo, trecho, data_voo_br, tipo_voo, problema, conexoes_info):
     pdf = FPDF()
     pdf.add_page()
     
@@ -254,11 +226,11 @@ def gerar_pdf(uf, nome, cpf, endereco, cia_completa, pnr, num_voo, trecho, data_
     trecho_voo_str = f" (Voo {num_voo})" if num_voo and num_voo != "PENDENTE_USUARIO" else ""
     pnr_str = "pendente" if pnr == "PENDENTE_USUARIO" else f"código localizador {pnr}"
     
-    relato_base = relato_usuario.strip() if relato_usuario and len(relato_usuario.strip()) > 5 else "O(A) requerente sofreu graves transtornos decorrentes de falha na prestação do serviço aéreo, com atraso superior a 4 horas e ausência de assistência material adequada."
+    trecho_fatos_especifico = obter_texto_fatos(problema)
     
     fatos = (f"O(A) requerente adquiriu bilhetes aéreos sob o {pnr_str}{trecho_voo_str}, para o trecho entre {trecho} ({tipo_voo}), com data prevista para o voo em {data_voo_br}.\n\n"
              f"{conexoes_info}"
-             f"Ocorre que, na data aprazada, a empresa requerida falhou na prestação do serviço contratado, incorrendo em {problema.lower()} da viagem. Detalhes do ocorrido: \"{relato_base}\". Destaca-se que a empresa não prestou a devida assistência material (alimentos, comunicação e hospedagem), em afronta direta às normativas da ANAC.\n\n"
+             f"{trecho_fatos_especifico}\n\n"
              f"Tal falha ultrapassa o mero aborrecimento cotidiano, causando severos transtornos, angústia e abalo emocional ao(à) requerente, que teve sua rotina abruptamente desorganizada por ato exclusivo da companhia aérea.")
     
     pdf.multi_cell(0, 5, txt(fatos), align="J")
@@ -324,8 +296,6 @@ def avancar_etapa(destino):
     st.rerun()
 
 def voltar_etapa(destino):
-    if destino == 2:
-        st.session_state.ia_processada = False
     st.session_state.etapa = destino
     st.rerun()
 
@@ -353,12 +323,7 @@ if st.session_state.etapa == "loading":
         </style>
     """, unsafe_allow_html=True)
     
-    if st.session_state.target_etapa == 3 and not st.session_state.get('ia_processada', False):
-        st.session_state.relato_danos_formatado = formatar_relato_ia(st.session_state.get('relato_danos', ''))
-        st.session_state.ia_processada = True
-    else:
-        time.sleep(1.5)
-        
+    time.sleep(1.0)
     st.session_state.etapa = st.session_state.target_etapa
     st.markdown("<script>window.parent.scrollTo({ top: 0, behavior: 'instant' });</script>", unsafe_allow_html=True)
     st.rerun()
@@ -390,8 +355,8 @@ elif st.session_state.etapa == 1:
 
     st.markdown("### 2. Relato do Ocorrido")
     relato_danos = st.text_area(
-        "Descreva brevemente o que aconteceu e os prejuízos sofridos (nossa IA completará o enquadramento jurídico padrão):",
-        placeholder="Ex: Fiquei mais de 5 horas aguardando no aeroporto sem receber voucher de alimentação ou hotel...",
+        "Descreva brevemente o que aconteceu e os prejuízos sofridos:",
+        placeholder="Ex: Fiquei mais de 5 horas aguardando no aeroporto sem assistência adequada...",
         value=st.session_state.get('relato_danos', '')
     )
 
@@ -578,6 +543,8 @@ elif st.session_state.etapa == 3:
     num_voo_val = st.session_state.get('num_voo', '')
     num_voo_html = f" (Voo {num_voo_val})" if num_voo_val else ""
     cpf_formatado = formatar_cpf(st.session_state.get('cpf', ''))
+    
+    trecho_fatos_preview = obter_texto_fatos(st.session_state.get('problema', 'Voo Atrasado (mais de 4h)'))
 
     st.markdown(f"""
     <div class="doc-container">
@@ -588,7 +555,7 @@ elif st.session_state.etapa == 3:
         <p align="center"><b>AÇÃO DE INDENIZAÇÃO POR DANOS MORAIS E MATERIAIS</b></p>
         <p><b>REQUERIDO:</b> {st.session_state.cia_completa.upper()}, pessoa jurídica de direito privado...</p>
         <p><b>I - DOS FATOS</b><br>
-        O(A) requerente adquiriu bilhetes aéreos sob o código localizador {pnr_html}{num_voo_html}, para o trecho entre {st.session_state.trecho} ({st.session_state.tipo_voo}), com data marcada para {st.session_state.data_voo_br}. Incidente registrado: {st.session_state.problema}. Ocorre que a empresa falhou gravemente na prestação do serviço...</p>
+        O(A) requerente adquiriu bilhetes aéreos sob o código localizador {pnr_html}{num_voo_html}, para o trecho entre {st.session_state.trecho} ({st.session_state.tipo_voo}), com data marcada para {st.session_state.data_voo_br}. {trecho_fatos_preview}</p>
         <p><b>II - DO DIREITO</b></p>
         <p class="blur-text">
         A relação jurídica submete-se às regras do Código de Defesa do Consumidor. A responsabilidade da companhia aérea é objetiva nos termos do artigo 14 da Lei 8078/90. O dano moral ocorre in re ipsa configurando quebra das resoluções da ANAC aplicáveis à espécie e jurisprudência pacífica do STJ.
@@ -675,7 +642,6 @@ elif st.session_state.etapa == 4:
             st.session_state.data_voo_br, 
             st.session_state.tipo_voo,
             st.session_state.problema,
-            st.session_state.get('relato_danos_formatado', st.session_state.get('relato_danos', '')),
             st.session_state.get('conexoes_info', '')
         )
 
