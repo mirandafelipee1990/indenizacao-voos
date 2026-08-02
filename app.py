@@ -2,6 +2,7 @@ import streamlit as st
 import time
 import re
 import locale
+import mercadopago
 from datetime import date
 from fpdf import FPDF
 
@@ -571,16 +572,37 @@ elif st.session_state.etapa == 4:
         st.session_state.pagamento_aprovado = False
 
     if not st.session_state.pagamento_aprovado:
-        st.markdown(f"""
+        st.markdown("""
         <div class="highlight-box">
             <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 18px; font-weight: 700;">Maximize o valor da sua indenização</h3>
             <p style="margin: 0; font-size: 14px; line-height: 1.5;">Advogados costumam cobrar até 30% do valor final. Com a petição estruturada com os fundamentos corretos, você mesmo faz o protocolo online em poucos minutos. Ações bem fundamentadas no Juizado Especial possuem um alto índice de acordos e procedência favorável ao consumidor, sem complicação.</p>
         </div>
         """, unsafe_allow_html=True)
 
+        sdk = mercadopago.SDK("APP_USR-8125982310395377-072919-ccdf9f63f282e5f0367f3da6ff93c83b-3577889586")
+        
+        preference_data = {
+            "items": [
+                {
+                    "title": "Petição Indenização Voo",
+                    "quantity": 1,
+                    "unit_price": 56.90
+                }
+            ],
+            "back_urls": {
+                "success": "https://resolfix.com.br",
+                "failure": "https://resolfix.com.br",
+                "pending": "https://resolfix.com.br"
+            },
+            "auto_return": "approved"
+        }
+        
+        resposta = sdk.preference().create(preference_data)
+        link_pagamento = resposta["response"]["init_point"]
+        
         st.link_button(
             "Liberar Minha Petição Agora - R$ 56,90", 
-            "https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=TOKEN_MERCADO_PAGO_EXEMPLO", 
+            link_pagamento, 
             type="primary", 
             use_container_width=True
         )
