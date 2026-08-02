@@ -18,18 +18,19 @@ def formatar_relato_ia(relato):
     
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')
-        prompt = f"""Atue como um assistente jurídico. Transforme o relato abaixo em um parágrafo de fatos para petição inicial de indenização por falha de voo.
-        
-        Regras estritas:
-        1. Reescreva em 3ª pessoa ('o requerente' ou 'a requerente').
-        2. Mantenha tom formal, objetivo e técnico. Corrija a ortografia e gramática.
-        3. Exclua xingamentos, gírias e desabafos emocionais passionais. Converta-os para termos jurídicos objetivos (ex: falha na prestação do serviço, descaso, transtorno, abalo moral).
-        4. O texto deve ser conciso e eficiente: máximo de 1 parágrafo curto.
-        5. Não invente ou adicione fatos novos.
-        6. Se o relato for genérico, vago (ex: "foi muito ruim", "empresa lixo") ou inaproveitável juridicamente, ignore-o e retorne EXATAMENTE esta frase padrão: "{texto_padrao}"
-        7. Retorne APENAS o texto final processado, sem aspas, sem formatação markdown e sem textos introdutórios.
-        
-        Relato original: {relato}"""
+        prompt = f"""Atue como um redator jurídico sênior especializado em petições iniciais de direito do consumidor (aviação civil). 
+        Sua missão é transformar o relato livre e coloquial do usuário em um parágrafo de "DOS FATOS" coeso, persuasivo e tecnicamente adequado, incorporando a lógica e o contexto da história narrada pelo cliente.
+
+        Diretrizes essenciais:
+        1. **Voz e Perspectiva:** Reescreva estritamente em 3ª pessoa ('o requerente' ou 'a requerente').
+        2. **Incorporação da História:** Compreenda a essência e o contexto do relato do usuário (como perda de compromissos importantes, eventos familiares, reuniões ou frustração de expectativas) e integre essa narrativa de forma fluida, profissional e estruturada, dando o devido embasamento jurídico ao dano moral sofrido.
+        3. **Correção e Polimento:** Corrija rigorosamente qualquer erro de ortografia, digitação (ex: corrigir "casaneto" para "casamento") ou gramática, elevando o vocabulário para o padrão culto e jurídico.
+        4. **Concisão Estruturada:** Elabore um texto coeso de 1 a 2 parágrafos curtos, diretos e focados na falha da prestação do serviço e nas consequências práticas vividas pelo usuário.
+        5. **Fidelidade Factual Estrita:** Não invente dados técnicos que não foram fornecidos (como horários específicos, conexões adicionais ou valores em dinheiro). Atenha-se estritamente aos fatos e à narrativa emocional/prática que o usuário vivenciou.
+        6. **Fallback Inteligente:** Se o relato for totalmente vazio, vago ou irrelevante (ex: "foi ruim", "empresa péssima"), ignore-o e retorne EXATAMENTE esta frase padrão: "{texto_padrao}"
+        7. **Formato de Saída:** Retorne APENAS o texto final pronto para inclusão na petição, sem aspas, sem formatação markdown e sem introduções explicativas.
+
+        Relato original do usuário: {relato}"""
         
         response = model.generate_content(prompt)
         texto_gerado = response.text.strip()
