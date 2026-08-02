@@ -96,27 +96,6 @@ st.markdown("""
     .highlight-box h3, .highlight-box p, .highlight-box span {
         color: #1e293b !important;
     }
-    .whatsapp-float {
-        position: fixed;
-        bottom: 25px;
-        right: 25px;
-        background-color: #25d366;
-        color: white !important;
-        width: 55px;
-        height: 55px;
-        border-radius: 50%;
-        text-align: center;
-        box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
-        z-index: 9999;
-        text-decoration: none !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .whatsapp-float:hover {
-        background-color: #128c7e !important;
-        color: white !important;
-    }
     @media (max-width: 768px) {
         h1 {
             font-size: 1.75rem !important;
@@ -132,11 +111,6 @@ st.markdown("""
         }
     }
     </style>
-    <a href="https://wa.me/556281096811?text=Olá,%20estou%20no%20site%20Resolfix%20e%20preciso%20de%20ajuda." target="_blank" class="whatsapp-float" title="Suporte WhatsApp">
-        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.601 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.558 6.558 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.193-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.012-.304.088-.403.087-.088.197-.232.296-.348.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34l-.38-.008c-.133 0-.348.048-.53.247-.182.198-.694.678-.694 1.654 0 .976.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.078.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
-        </svg>
-    </a>
 """, unsafe_allow_html=True)
 
 LINKS_TJ = {
@@ -355,12 +329,12 @@ elif st.session_state.etapa == 1:
                 <span style="color: #60a5fa;" class="pulsing-text">Receba até R$ 10.000!</span>
             </h1>
             <p style="color: #cbd5e1; font-size: 15px; margin-top: 8px;">
-                Direitos garantidos por lei para atrasos superiores a 4h ou cancelamentos. Nós cuidamos da burocracia.
+                Gere sua petição pronta em 5 minutos e protocole você mesmo, sem pagar honorários a advogados.
             </p>
         </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("### O que deu errado com o seu voo?")
+    st.markdown("### 1. O que deu errado com o seu voo?")
     problema_escolhido = st.radio(
         "Selecione o incidente principal:",
         ["Voo Atrasado (mais de 4h)", "Voo Cancelado", "Perda de Conexão / Outros"],
@@ -368,48 +342,35 @@ elif st.session_state.etapa == 1:
         label_visibility="collapsed"
     )
 
-    st.markdown("---")
-    st.markdown("### Seus Dados Cadastrais")
+    st.markdown("### 2. Relato do Ocorrido")
+    relato_danos = st.text_area(
+        "Descreva brevemente o que aconteceu e os prejuízos sofridos (nossa IA completará o enquadramento jurídico padrão):",
+        placeholder="Ex: Fiquei mais de 5 horas aguardando no aeroporto sem receber voucher de alimentação ou hotel...",
+        value=st.session_state.get('relato_danos', '')
+    )
 
-    nome = st.text_input("Nome Completo:", placeholder="Digite seu nome completo", value=st.session_state.get('nome', ''))
-    email = st.text_input("E-mail para envio da Petição:", placeholder="seu@email.com", value=st.session_state.get('email', ''))
-
+    st.markdown("### 3. Companhia Aérea")
     index_cia = None
     if 'cia_simples' in st.session_state and st.session_state.cia_simples in CIAS_SIMPLES:
         index_cia = CIAS_SIMPLES.index(st.session_state.cia_simples)
-    cia_selecionada = st.selectbox("Companhia Aérea Responsável:", CIAS_SIMPLES, index=index_cia, placeholder="Selecione a companhia aérea...")
+    cia_selecionada = st.selectbox("Qual foi a companhia aérea responsável?", CIAS_SIMPLES, index=index_cia, placeholder="Selecione a companhia aérea...")
 
     st.markdown("")
-    if st.button("Descubra o quanto pode ganhar ➡️", type="primary", use_container_width=True):
-        if len(nome.strip().split()) < 2:
-            st.error("Por favor, insira seu nome completo (Nome e Sobrenome).")
-        elif not email or "@" not in email or "." not in email:
-            st.error("Por favor, insira um e-mail válido.")
-        elif not cia_selecionada:
+    if st.button("Continuar ➡️", type="primary", use_container_width=True):
+        if not cia_selecionada:
             st.error("Por favor, selecione a companhia aérea responsável.")
         else:
             st.session_state.problema = problema_escolhido
-            st.session_state.nome = nome.strip()
-            st.session_state.primeiro_nome = nome.strip().split()[0]
-            st.session_state.email = email.strip()
+            st.session_state.relato_danos = relato_danos
             st.session_state.cia_simples = cia_selecionada
             st.session_state.cia_completa = CIAS_MAPPING[cia_selecionada]
             avancar_etapa(2)
 
 elif st.session_state.etapa == 2:
-    primeiro_nome = st.session_state.get('primeiro_nome', 'Visitante')
-    st.title(f"Agora, {primeiro_nome}, precisamos dos detalhes da sua rota")
+    st.title("Detalhes do Voo e Dados Pessoais")
+    st.markdown("Preencha as informações abaixo para a elaboração técnica da sua petição.")
 
-    endereco = st.text_input("Endereço Residencial Completo:", placeholder="Rua, Número, Bairro, Cidade - CEP", value=st.session_state.get('endereco', ''))
-    
-    cpf_input = st.text_input("CPF (Apenas os números):", max_chars=11, placeholder="00000000000", value=st.session_state.get('cpf', ''))
-    
-    st.markdown("<p style='font-size: 14px; color: #64748b; margin-top: -10px; margin-bottom: 15px;'><span style='color: #16a34a;'>🔒</span> Dados protegidos pela LGPD (Lei nº 13.709/18) e utilizados exclusivamente para esta petição.</p>", unsafe_allow_html=True)
-
-    index_estado = None
-    if 'uf' in st.session_state and st.session_state.uf in ESTADOS:
-        index_estado = ESTADOS.index(st.session_state.uf)
-    uf = st.selectbox("Selecione seu Estado (UF) para protocolo:", ESTADOS, index=index_estado, placeholder="Selecione o estado (UF)...")
+    st.markdown("### Dados do Voo")
     
     tipo_voo = st.radio("Tipo de Voo:", ["Nacional", "Internacional"], horizontal=True, index=0 if st.session_state.get('tipo_voo', 'Nacional') == 'Nacional' else 1)
     lista_aeroportos = AEROPORTOS_NACIONAIS if tipo_voo == "Nacional" else AEROPORTOS_INTERNACIONAIS
@@ -445,6 +406,8 @@ elif st.session_state.etapa == 2:
         if aeroportos_conexao:
             conexoes_info = f"O trajeto incluiu conexões/escalas em {aeroportos_conexao}.\n\n"
 
+    data_voo = st.date_input("Data do Voo:", max_value=date(2026, 7, 28), format="DD/MM/YYYY")
+
     if 'checked_nao_lembro' not in st.session_state:
         st.session_state.checked_nao_lembro = False
         
@@ -469,16 +432,25 @@ elif st.session_state.etapa == 2:
     if st.session_state.checked_nao_lembro:
         pnr = "PENDENTE_USUARIO"
         num_voo = ""
-        st.info(f"💡 Tudo bem, {primeiro_nome}! Você poderá atualizar esse dado posteriormente com o suporte ou na petição.")
+        st.info("💡 Tudo bem! Você poderá atualizar esse dado posteriormente com o suporte ou na petição.")
 
-    st.markdown("### Relato do Ocorrido")
-    relato_danos = st.text_area(
-        "Descreva brevemente o que aconteceu e os prejuízos sofridos (nossa IA completará o enquadramento jurídico padrão):",
-        placeholder="Ex: Fiquei mais de 5 horas aguardando no aeroporto sem receber voucher de alimentação ou hotel...",
-        value=st.session_state.get('relato_danos', '')
-    )
+    st.markdown("---")
+    st.markdown("### Seus Dados Pessoais")
+    
+    nome = st.text_input("Nome Completo:", placeholder="Digite seu nome completo", value=st.session_state.get('nome', ''))
+    email = st.text_input("E-mail para envio da Petição:", placeholder="seu@email.com", value=st.session_state.get('email', ''))
+    
+    index_estado = None
+    if 'uf' in st.session_state and st.session_state.uf in ESTADOS:
+        index_estado = ESTADOS.index(st.session_state.uf)
+    uf = st.selectbox("Selecione seu Estado (UF) para protocolo:", ESTADOS, index=index_estado, placeholder="Selecione o estado (UF)...")
+    
+    endereco = st.text_input("Endereço Residencial Completo:", placeholder="Rua, Número, Bairro, Cidade - CEP", value=st.session_state.get('endereco', ''))
+    
+    cpf_input = st.text_input("CPF (Apenas os números):", max_chars=11, placeholder="00000000000", value=st.session_state.get('cpf', ''))
+    
+    st.markdown("<p style='font-size: 14px; color: #64748b; margin-top: -10px; margin-bottom: 15px;'><span style='color: #16a34a;'>🔒</span> Dados protegidos pela LGPD (Lei nº 13.709/18) e utilizados exclusivamente para esta petição.</p>", unsafe_allow_html=True)
 
-    data_voo = st.date_input("Data do Voo:", max_value=date(2026, 7, 28), format="DD/MM/YYYY")
     hoje = date(2026, 7, 28)
     dias_passados = (hoje - data_voo).days
     prazo_valido = True
@@ -500,29 +472,27 @@ elif st.session_state.etapa == 2:
             origem_valida = origem.strip() if origem_sel == "Outro / Não listado" else origem
             destino_valida = destino.strip() if destino_sel == "Outro / Não listado" else destino
 
-            if not endereco or len(re.sub(r'\D', '', cpf_input)) != 11:
-                st.error("Por favor, preencha o endereço completo e um CPF válido com 11 dígitos numéricos.")
-            elif not uf:
-                st.error("Por favor, selecione o Estado (UF) para protocolo.")
-            elif not origem_sel:
+            if not origem_sel:
                 st.error("Por favor, selecione o aeroporto de origem.")
             elif not destino_sel:
                 st.error("Por favor, selecione o aeroporto de destino final.")
-            elif not st.session_state.checked_nao_lembro and len(pnr) != 6:
-                st.error("Preencha o Código Localizador (PNR) com exatamente 6 dígitos, ou marque a opção de que não possui o código em mãos.")
             elif not origem_valida or not destino_valida:
                 st.error("Preencha os aeroportos de origem e destino.")
             elif origem_valida == destino_valida:
                 st.error("A origem e o destino não podem ser iguais.")
+            elif not st.session_state.checked_nao_lembro and len(pnr) != 6:
+                st.error("Preencha o Código Localizador (PNR) com exatamente 6 dígitos, ou marque a opção de que não possui o código em mãos.")
             elif not prazo_valido:
                 st.error(f"❌ Não é possível prosseguir. O prazo limite legal de {limite_texto} para requerer esta indenização já expirou.")
+            elif len(nome.strip().split()) < 2:
+                st.error("Por favor, insira seu nome completo (Nome e Sobrenome).")
+            elif not email or "@" not in email or "." not in email:
+                st.error("Por favor, insira um e-mail válido.")
+            elif not uf:
+                st.error("Por favor, selecione o Estado (UF) para protocolo.")
+            elif not endereco or len(re.sub(r'\D', '', cpf_input)) != 11:
+                st.error("Por favor, preencha o endereço completo e um CPF válido com 11 dígitos numéricos.")
             else:
-                st.session_state.endereco = endereco
-                st.session_state.cpf = re.sub(r'\D', '', cpf_input)
-                st.session_state.uf = uf
-                st.session_state.nao_lembro_dados = st.session_state.checked_nao_lembro
-                st.session_state.pnr = pnr
-                st.session_state.num_voo = num_voo.strip()
                 st.session_state.origem_sel = origem_sel
                 st.session_state.destino_sel = destino_sel
                 st.session_state.origem_custom = origem if origem_sel == "Outro / Não listado" else ""
@@ -535,7 +505,15 @@ elif st.session_state.etapa == 2:
                 st.session_state.tipo_conexao = tipo_conexao
                 st.session_state.aeroportos_conexao = aeroportos_conexao
                 st.session_state.conexoes_info = conexoes_info
-                st.session_state.relato_danos = relato_danos
+                st.session_state.nao_lembro_dados = st.session_state.checked_nao_lembro
+                st.session_state.pnr = pnr
+                st.session_state.num_voo = num_voo.strip()
+                st.session_state.nome = nome.strip()
+                st.session_state.primeiro_nome = nome.strip().split()[0]
+                st.session_state.email = email.strip()
+                st.session_state.uf = uf
+                st.session_state.endereco = endereco
+                st.session_state.cpf = re.sub(r'\D', '', cpf_input)
                 avancar_etapa(3)
 
 elif st.session_state.etapa == 3:
