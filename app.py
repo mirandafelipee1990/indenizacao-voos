@@ -3,8 +3,40 @@ import time
 import re
 import locale
 import mercadopago
+import google.generativeai as genai
+import os
 from datetime import date
 from fpdf import FPDF
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+def formatar_relato_ia(relato):
+    texto_padrao = "O(A) requerente sofreu graves transtornos decorrentes de falha na prestação do serviço aéreo, suportando descaso e ausência de assistência adequada por parte da companhia requerida, o que frustrou o planejamento de sua viagem e causou abalo moral."
+    
+    if not relato or len(relato.strip()) < 10:
+        return texto_padrao
+    
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        prompt = f"""Atue como um assistente jurídico. Transforme o relato abaixo em um parágrafo de fatos para petição inicial de indenização por falha de voo.
+        
+        Regras estritas:
+        1. Reescreva em 3ª pessoa ('o requerente' ou 'a requerente').
+        2. Mantenha tom formal, objetivo e técnico. Corrija a ortografia e gramática.
+        3. Exclua xingamentos, gírias e desabafos emocionais passionais. Converta-os para termos jurídicos objetivos (ex: falha na prestação do serviço, descaso, transtorno, abalo moral).
+        4. O texto deve ser conciso e eficiente: máximo de 1 parágrafo curto.
+        5. Não invente ou adicione fatos novos.
+        6. Se o relato for genérico, vago (ex: "foi muito ruim", "empresa lixo") ou inaproveitável juridicamente, ignore-o e retorne EXATAMENTE esta frase padrão: "{texto_padrao}"
+        7. Retorne APENAS o texto final processado, sem aspas, sem formatação markdown e sem textos introdutórios.
+        
+        Relato original: {relato}"""
+        
+        response = model.generate_content(prompt)
+        texto_gerado = response.text.strip()
+        
+        return texto_gerado if texto_gerado else texto_padrao
+    except Exception:
+        return relato.strip()
 
 try:
     locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
@@ -287,6 +319,8 @@ def avancar_etapa(destino):
     st.rerun()
 
 def voltar_etapa(destino):
+    if destino == 2:
+        st.session_state.ia_processada = False
     st.session_state.etapa = destino
     st.rerun()
 
@@ -313,7 +347,13 @@ if st.session_state.etapa == "loading":
         }
         </style>
     """, unsafe_allow_html=True)
-    time.sleep(1.5)
+    
+    if st.session_state.target_etapa == 3 and not st.session_state.get('ia_processada', False):
+        st.session_state.relato_danos_formatado = formatar_relato_ia(st.session_state.get('relato_danos', ''))
+        st.session_state.ia_processada = True
+    else:
+        time.sleep(1.5)
+        
     st.session_state.etapa = st.session_state.target_etapa
     st.markdown("<script>window.parent.scrollTo({ top: 0, behavior: 'instant' });</script>", unsafe_allow_html=True)
     st.rerun()
@@ -579,7 +619,7 @@ elif st.session_state.etapa == 4:
         </div>
         """, unsafe_allow_html=True)
 
-        sdk = mercadopago.SDK("APP_USR-8125982310395377-072919-ccdf9f63f282e5f0367f3da6ff93c83b-3577889586")
+        sdk = mercadopago.SDK(os.getenv("MP_ACCESS_TOKEN"))
         
         preference_data = {
             "items": [
@@ -630,7 +670,7 @@ elif st.session_state.etapa == 4:
             st.session_state.data_voo_br, 
             st.session_state.tipo_voo,
             st.session_state.problema,
-            st.session_state.get('relato_danos', ''),
+            st.session_state.get('relato_danos_formatado', st.session_state.get('relato_danos', '')),
             st.session_state.get('conexoes_info', '')
         )
 
