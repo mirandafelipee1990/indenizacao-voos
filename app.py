@@ -156,7 +156,7 @@ AEROPORTOS_NACIONAIS = [
     "São Paulo - Congonhas (CGH)", "São Paulo - Guarulhos (GRU)",
     "São Paulo - Viracopos / Campinas (VCP)", "Rio de Janeiro - Santos Dumont (SDU)",
     "Rio de Janeiro - Galeão (GIG)", "Belo Horizonte - Confins (CNF)",
-    "Brasília - Presidente Juscelino Kubits ক্ষমতায়(BSB)", "Salvador - Deputado Luís Eduardo Magalhães (SSA)",
+    "Brasília - Presidente Juscelino Kubitschek (BSB)", "Salvador - Deputado Luís Eduardo Magalhães (SSA)",
     "Fortaleza - Pinto Martins (FOR)", "Recife - Guararapes (REC)",
     "Curitiba - Afonso Pena (CWB)", "Porto Alegre - Salgado Filho (POA)",
     "Goiânia - Santa Genoveva (GYN)", "Florianópolis - Hercílio Luz (FLN)",
@@ -537,7 +537,10 @@ elif st.session_state.etapa == 2:
                     "cpf": re.sub(r'\D', '', cpf_input),
                     "uf": uf,
                     "problema": st.session_state.problema,
-                    "trecho": f"{origem_valida} até {destino_valida}"
+                    "companhia": st.session_state.cia_simples,
+                    "companhia_completa": st.session_state.cia_completa,
+                    "trecho": f"{origem_valida} até {destino_valida}",
+                    "pnr": pnr
                 }
                 
                 try:
