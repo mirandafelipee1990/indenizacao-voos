@@ -379,9 +379,6 @@ elif st.session_state.etapa == 1:
             avancar_etapa(2)
 
 elif st.session_state.etapa == 2:
-    st.title("Detalhes do Voo")
-    st.markdown("Preencha as informações abaixo para a elaboração técnica da sua petição.")
-
     st.markdown("### Dados do Voo")
     
     tipo_voo = st.radio("Tipo de Voo:", ["Nacional", "Internacional"], horizontal=True, index=0 if st.session_state.get('tipo_voo', 'Nacional') == 'Nacional' else 1)
@@ -613,7 +610,7 @@ elif st.session_state.etapa == 4:
         </div>
         """, unsafe_allow_html=True)
 
-        sdk = mercadopago.SDK(os.getenv("MP_ACCESS_TOKEN"))
+        sdk = mercadopago.SDK("APP_USR-8125982310395377-072919-ccdf9f63f282e5f0367f3da6ff93c83b-3577889586")
         
         preference_data = {
             "items": [
