@@ -22,6 +22,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- CAPTURA DE RETORNO DO MERCADO PAGO ---
+query_params = st.query_params
+if "collection_status" in query_params and query_params["collection_status"] == "approved":
+    st.session_state.pagamento_aprovado = True
+    st.session_state.etapa = 4
+
 st.markdown('<div id="topo"></div>', unsafe_allow_html=True)
 
 st.markdown("""
