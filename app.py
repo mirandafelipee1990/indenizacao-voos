@@ -4,6 +4,7 @@ import re
 import locale
 import mercadopago
 import os
+import requests
 from datetime import date
 from fpdf import FPDF
 
@@ -155,7 +156,7 @@ AEROPORTOS_NACIONAIS = [
     "São Paulo - Congonhas (CGH)", "São Paulo - Guarulhos (GRU)",
     "São Paulo - Viracopos / Campinas (VCP)", "Rio de Janeiro - Santos Dumont (SDU)",
     "Rio de Janeiro - Galeão (GIG)", "Belo Horizonte - Confins (CNF)",
-    "Brasília - Presidente Juscelino Kubitschek (BSB)", "Salvador - Deputado Luís Eduardo Magalhães (SSA)",
+    "Brasília - Presidente Juscelino Kubits ক্ষমতায়(BSB)", "Salvador - Deputado Luís Eduardo Magalhães (SSA)",
     "Fortaleza - Pinto Martins (FOR)", "Recife - Guararapes (REC)",
     "Curitiba - Afonso Pena (CWB)", "Porto Alegre - Salgado Filho (POA)",
     "Goiânia - Santa Genoveva (GYN)", "Florianópolis - Hercílio Luz (FLN)",
@@ -527,6 +528,24 @@ elif st.session_state.etapa == 2:
                 st.session_state.uf = uf
                 st.session_state.endereco = endereco
                 st.session_state.cpf = re.sub(r'\D', '', cpf_input)
+                
+                # --- INTEGRAÇÃO COM MAKE.COM ---
+                webhook_url = "https://hook.us2.make.com/ypgqbrgk8l9hgevkzvo1pphjiyefwmsf"
+                payload = {
+                    "nome": nome.strip(),
+                    "email": email.strip(),
+                    "cpf": re.sub(r'\D', '', cpf_input),
+                    "uf": uf,
+                    "problema": st.session_state.problema,
+                    "trecho": f"{origem_valida} até {destino_valida}"
+                }
+                
+                try:
+                    requests.post(webhook_url, json=payload, timeout=5)
+                except Exception:
+                    pass
+                # -------------------------------
+                
                 avancar_etapa(3)
 
 elif st.session_state.etapa == 3:
