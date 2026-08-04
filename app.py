@@ -623,7 +623,6 @@ elif st.session_state.etapa == 4:
         </div>
         """, unsafe_allow_html=True)
 
-        # Gera a preferência apenas uma vez e vincula o external_reference para rastreio do PIX
         if 'id_pedido' not in st.session_state:
             st.session_state.id_pedido = f"PED-{int(time.time())}-{st.session_state.cpf}"
             preference_data = {
@@ -698,8 +697,7 @@ elif st.session_state.etapa == 4:
 
         # --- DISPARO AUTOMÁTICO DO PDF POR E-MAIL (MAKE.COM WEBHOOK) ---
         if 'email_enviado' not in st.session_state:
-            # COLE AQUI A URL DO SEU NOVO WEBHOOK DO MAKE.COM PARA ENVIO DE E-MAIL
-            webhook_email_url = "COLOQUE_AQUI_A_URL_DO_SEU_WEBHOOK_MAKE_DE_EMAIL"
+            webhook_email_url = "https://hook.us2.make.com/3jhvmkkpyfyhpallgj27r95gb4nka1o2"
             
             files = {'arquivo': (f"peticao_atraso_voo_{st.session_state.pnr}.pdf", pdf_bytes, 'application/pdf')}
             data = {
