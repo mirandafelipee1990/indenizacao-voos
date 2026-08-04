@@ -24,9 +24,9 @@ st.set_page_config(
 
 # --- CAPTURA DE RETORNO DO MERCADO PAGO ---
 query_params = st.query_params
-if "collection_status" in query_params and query_params["collection_status"] == "approved":
-    st.session_state.pagamento_aprovado = True
+if query_params.get("status") == "sucesso":
     st.session_state.etapa = 4
+    st.session_state.pagamento_aprovado = True
 
 # --- CAPTURA DE DADOS VIA E-MAIL (RECUPERAÇÃO) ---
 for chave in ["nome", "email", "cpf", "uf"]:
@@ -634,9 +634,9 @@ elif st.session_state.etapa == 4:
                     }
                 ],
                 "back_urls": {
-                    "success": "https://resolfix.com.br",
-                    "failure": "https://resolfix.com.br",
-                    "pending": "https://resolfix.com.br"
+                    "success": "https://resolfix.com.br/?status=sucesso",
+                    "failure": "https://resolfix.com.br/?status=erro",
+                    "pending": "https://resolfix.com.br/?status=pendente"
                 },
                 "auto_return": "approved",
                 "external_reference": st.session_state.id_pedido
