@@ -8,7 +8,6 @@ import requests
 from datetime import date
 from fpdf import FPDF
 from supabase import create_client, Client
-import streamlit.components.v1 as components
 
 # --- CONFIGURAÇÃO SUPABASE ---
 SUPABASE_URL = "https://vratkswxzhwnjkwltjyi.supabase.co"
@@ -576,7 +575,6 @@ elif st.session_state.etapa == 2:
                 
                 dados_db = {
                     "id": st.session_state.id_pedido,
-                    "status": "pending",
                     "nome": st.session_state.nome,
                     "email": st.session_state.email,
                     "cpf": st.session_state.cpf,
@@ -665,14 +663,6 @@ elif st.session_state.etapa == 4:
     if 'pagamento_aprovado' not in st.session_state:
         st.session_state.pagamento_aprovado = False
 
-    if supabase and 'id_pedido' in st.session_state:
-        try:
-            res = supabase.table("pedidos").select("status").eq("id", st.session_state.id_pedido).execute()
-            if res.data and res.data[0].get("status") == "approved":
-                st.session_state.pagamento_aprovado = True
-        except Exception:
-            pass
-
     sdk = mercadopago.SDK("APP_USR-1689026143657988-072919-e2bdce9cb1761b0cf1a4298c53034a33-188311197")
 
     if not st.session_state.pagamento_aprovado:
@@ -707,27 +697,35 @@ elif st.session_state.etapa == 4:
             resposta = sdk.preference().create(preference_data)
             st.session_state.link_pagamento = resposta["response"]["init_point"]
         
-        # --- CHECKOUT EMBUTIDO VIA IFRAME (SEGURO E FUNCIONAL) ---
-        components.html(f"""
-            <iframe src="{st.session_state.link_pagamento}" width="100%" height="520px" style="border:none; border-radius:12px; background:#fff;"></iframe>
-        """, height=540)
+        st.link_button(
+            "Pagar com PIX ou Cartão (Liberar Petição)", 
+            st.session_state.link_pagamento, 
+            type="primary", 
+            use_container_width=True
+        )
 
         st.markdown("---")
-        st.info("🔄 **Aguardando confirmação do pagamento...** Assim que o pagamento for concluído com sucesso, esta página atualizará automaticamente para a tela de agradecimento.")
+        st.info("🔄 **Aguardando confirmação do pagamento...** Assim que o PIX ou cartão for compensado, esta página atualizará automaticamente.")
 
         col_btest1, col_btest2 = st.columns(2)
         with col_btest1:
             if st.button("⚡ Simular Pagamento Aprovado (Bypass de Teste)"):
-                if supabase and 'id_pedido' in st.session_state:
-                    try:
-                        supabase.table("pedidos").update({"status": "approved"}).eq("id", st.session_state.id_pedido).execute()
-                    except Exception:
-                        pass
                 st.session_state.pagamento_aprovado = True
                 st.rerun()
 
-        time.sleep(4)
+        # --- POLLING AUTOMÁTICO PARA RECONHECER O PIX SEM RECARREGAR ---
+        try:
+            busca = sdk.payment().search({"external_reference": st.session_state.id_pedido})
+            pagamentos = busca.get("response", {}).get("results", [])
+            if any(p.get("status") == "approved" for p in pagamentos):
+                st.session_state.pagamento_aprovado = True
+                st.rerun()
+        except Exception:
+            pass
+
+        time.sleep(5)
         st.rerun()
+        # -------------------------------------------------------------
 
     else:
         st.success("🎉 Pagamento Confirmado com Sucesso!")
@@ -749,9 +747,12 @@ elif st.session_state.etapa == 4:
             st.session_state.get('conexoes_info', '')
         )
 
+        # --- DISPARO AUTOMÁTICO DO PDF POR E-MAIL (MAKE.COM WEBHOOK) ---
         if 'email_enviado' not in st.session_state:
             webhook_email_url = "https://hook.us2.make.com/3jhvmkkpyfyhpallgj27r95gb4nka1o2"
+            
             link_do_tribunal = LINKS_TJ.get(st.session_state.uf, "https://www.tjsp.jus.br")
+            
             files = {'arquivo': (f"peticao_atraso_voo_{st.session_state.pnr}.pdf", pdf_bytes, 'application/pdf')}
             data = {
                 'email': st.session_state.email, 
@@ -760,11 +761,14 @@ elif st.session_state.etapa == 4:
                 'uf': st.session_state.uf,
                 'link_tj': link_do_tribunal
             }
+            
             try:
                 requests.post(webhook_email_url, files=files, data=data, timeout=10)
             except Exception:
                 pass
+                
             st.session_state.email_enviado = True
+        # -------------------------------------------------------------
 
         st.download_button(
             label="📥 Baixar Minha Petição Oficial (PDF)",
