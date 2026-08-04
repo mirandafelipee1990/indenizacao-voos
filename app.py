@@ -590,7 +590,8 @@ elif st.session_state.etapa == 2:
                     "data_voo_br": st.session_state.data_voo_br,
                     "conexoes_info": st.session_state.conexoes_info,
                     "pnr": st.session_state.pnr,
-                    "num_voo": st.session_state.num_voo
+                    "num_voo": st.session_state.num_voo,
+                    "status": "pending" # <-- ADICIONADO PARA PREPARAR A TRAVA ATÔMICA
                 }
 
                 if supabase:
@@ -728,6 +729,28 @@ elif st.session_state.etapa == 4:
         # -------------------------------------------------------------
 
     else:
+        # --- INÍCIO DA SINCRONIZAÇÃO DE ABAS (FRONTEND) ---
+        st.markdown("""
+        <script>
+        const bc = new BroadcastChannel('resolfix_payment');
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Se esta aba veio do redirecionamento do Mercado Pago
+        if (urlParams.has('status') || urlParams.has('collection_status')) {
+            bc.postMessage('fechar_aba_duplicada');
+        }
+        
+        bc.onmessage = (event) => {
+            if (event.data === 'fechar_aba_duplicada' && !urlParams.has('status') && !urlParams.has('collection_status')) {
+                // Esta é a aba original que ficou aberta. O Mercado Pago abriu uma nova.
+                // Vamos ocultar o conteúdo desta e avisar o usuário para evitar poluição visual.
+                document.body.innerHTML = "<div style='display:flex; height:100vh; align-items:center; justify-content:center; font-family:sans-serif; background:#f0f2f6; text-align:center; padding:20px;'><div style='background:white; padding:40px; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.1);'><h2 style='color:#16a34a;'>Pagamento Concluído! 🎉</h2><p style='color:#64748b;'>O processo de sucesso está sendo exibido na aba que se abriu.<br>Você já pode fechar esta tela original com segurança.</p></div></div>";
+            }
+        };
+        </script>
+        """, unsafe_allow_html=True)
+        # --- FIM DA SINCRONIZAÇÃO DE ABAS ---
+
         st.success("🎉 Pagamento Confirmado com Sucesso!")
         st.info(f"Uma cópia de segurança da sua petição também foi encaminhada para o e-mail cadastrado: **{st.session_state.email}**.")
 
@@ -747,26 +770,35 @@ elif st.session_state.etapa == 4:
             st.session_state.get('conexoes_info', '')
         )
 
-        # --- DISPARO AUTOMÁTICO DO PDF POR E-MAIL (MAKE.COM WEBHOOK) ---
+        # --- DISPARO AUTOMÁTICO DO PDF POR E-MAIL E TRAVA ATÔMICA ---
         if 'email_enviado' not in st.session_state:
-            webhook_email_url = "https://hook.us2.make.com/3jhvmkkpyfyhpallgj27r95gb4nka1o2"
+            processar_webhook = True
             
-            link_do_tribunal = LINKS_TJ.get(st.session_state.uf, "https://www.tjsp.jus.br")
-            
-            files = {'arquivo': (f"peticao_atraso_voo_{st.session_state.pnr}.pdf", pdf_bytes, 'application/pdf')}
-            data = {
-                'email': st.session_state.email, 
-                'nome': st.session_state.nome,
-                'pnr': st.session_state.pnr,
-                'uf': st.session_state.uf,
-                'link_tj': link_do_tribunal
-            }
-            
-            try:
-                requests.post(webhook_email_url, files=files, data=data, timeout=10)
-            except Exception:
-                pass
+            if supabase:
+                # O comando .eq("status", "pending") garante que apenas o PRIMEIRO disparo atualize a linha.
+                resposta = supabase.table("pedidos").update({"status": "processed"}).eq("id", st.session_state.id_pedido).eq("status", "pending").execute()
                 
+                if len(resposta.data) == 0:
+                    processar_webhook = False
+                    
+            if processar_webhook:
+                webhook_email_url = "https://hook.us2.make.com/3jhvmkkpyfyhpallgj27r95gb4nka1o2"
+                link_do_tribunal = LINKS_TJ.get(st.session_state.uf, "https://www.tjsp.jus.br")
+                
+                files = {'arquivo': (f"peticao_atraso_voo_{st.session_state.pnr}.pdf", pdf_bytes, 'application/pdf')}
+                data = {
+                    'email': st.session_state.email, 
+                    'nome': st.session_state.nome,
+                    'pnr': st.session_state.pnr,
+                    'uf': st.session_state.uf,
+                    'link_tj': link_do_tribunal
+                }
+                
+                try:
+                    requests.post(webhook_email_url, files=files, data=data, timeout=10)
+                except Exception:
+                    pass
+                    
             st.session_state.email_enviado = True
         # -------------------------------------------------------------
 
