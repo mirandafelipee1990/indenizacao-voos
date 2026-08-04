@@ -46,18 +46,17 @@ def carregar_dados_supabase(id_pedido):
 # --- CAPTURA DA URL (RECUPERAÇÃO DE CARRINHO OU RETORNO DO MP) ---
 query_params = st.query_params
 
-if "recuperar" in query_params:
-    sucesso = carregar_dados_supabase(query_params["recuperar"])
+ref_id = query_params.get("external_reference") or query_params.get("recuperar")
+
+if ref_id:
+    sucesso = carregar_dados_supabase(ref_id)
     if sucesso:
         st.session_state.etapa = 4
-        st.session_state.pagamento_aprovado = False
-
-elif query_params.get("status") == "approved" or query_params.get("collection_status") == "approved" or query_params.get("status") == "sucesso":
-    ref_id = query_params.get("external_reference")
-    if ref_id:
-        carregar_dados_supabase(ref_id)
-    st.session_state.etapa = 4
-    st.session_state.pagamento_aprovado = True
+        status_param = query_params.get("status") or query_params.get("collection_status")
+        if status_param == "approved" or status_param == "sucesso":
+            st.session_state.pagamento_aprovado = True
+        else:
+            st.session_state.pagamento_aprovado = False
 
 # --- CAPTURA DE DADOS VIA E-MAIL (RECUPERAÇÃO ANTIGA) ---
 for chave in ["nome", "email", "cpf", "uf"]:
@@ -591,7 +590,7 @@ elif st.session_state.etapa == 2:
                     "conexoes_info": st.session_state.conexoes_info,
                     "pnr": st.session_state.pnr,
                     "num_voo": st.session_state.num_voo,
-                    "status": "pending" # <-- ADICIONADO PARA PREPARAR A TRAVA ATÔMICA
+                    "status": "pending"
                 }
 
                 if supabase:
@@ -681,7 +680,7 @@ elif st.session_state.etapa == 4:
             preference_data = {
                 "items": [
                     {
-                        "title": "Petição Indenização Voo (Teste)",
+                        "title": "Petição Indenização Voo",
                         "quantity": 1,
                         "unit_price": 1.00
                     }
@@ -735,15 +734,12 @@ elif st.session_state.etapa == 4:
         const bc = new BroadcastChannel('resolfix_payment');
         const urlParams = new URLSearchParams(window.location.search);
         
-        // Se esta aba veio do redirecionamento do Mercado Pago
         if (urlParams.has('status') || urlParams.has('collection_status')) {
             bc.postMessage('fechar_aba_duplicada');
         }
         
         bc.onmessage = (event) => {
             if (event.data === 'fechar_aba_duplicada' && !urlParams.has('status') && !urlParams.has('collection_status')) {
-                // Esta é a aba original que ficou aberta. O Mercado Pago abriu uma nova.
-                // Vamos ocultar o conteúdo desta e avisar o usuário para evitar poluição visual.
                 document.body.innerHTML = "<div style='display:flex; height:100vh; align-items:center; justify-content:center; font-family:sans-serif; background:#f0f2f6; text-align:center; padding:20px;'><div style='background:white; padding:40px; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.1);'><h2 style='color:#16a34a;'>Pagamento Concluído! 🎉</h2><p style='color:#64748b;'>O processo de sucesso está sendo exibido na aba que se abriu.<br>Você já pode fechar esta tela original com segurança.</p></div></div>";
             }
         };
@@ -775,7 +771,6 @@ elif st.session_state.etapa == 4:
             processar_webhook = True
             
             if supabase:
-                # O comando .eq("status", "pending") garante que apenas o PRIMEIRO disparo atualize a linha.
                 resposta = supabase.table("pedidos").update({"status": "processed"}).eq("id", st.session_state.id_pedido).eq("status", "pending").execute()
                 
                 if len(resposta.data) == 0:
