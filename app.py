@@ -699,11 +699,15 @@ elif st.session_state.etapa == 4:
         if 'email_enviado' not in st.session_state:
             webhook_email_url = "https://hook.us2.make.com/3jhvmkkpyfyhpallgj27r95gb4nka1o2"
             
+            link_do_tribunal = LINKS_TJ.get(st.session_state.uf, "https://www.tjsp.jus.br")
+            
             files = {'arquivo': (f"peticao_atraso_voo_{st.session_state.pnr}.pdf", pdf_bytes, 'application/pdf')}
             data = {
                 'email': st.session_state.email, 
                 'nome': st.session_state.nome,
-                'pnr': st.session_state.pnr
+                'pnr': st.session_state.pnr,
+                'uf': st.session_state.uf,
+                'link_tj': link_do_tribunal
             }
             
             try:
