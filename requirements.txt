@@ -2,3 +2,4 @@ streamlit
 fpdf
 mercadopago
 google-generativeai
+supabase
