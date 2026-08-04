@@ -616,14 +616,14 @@ elif st.session_state.etapa == 4:
         </div>
         """, unsafe_allow_html=True)
 
-        sdk = mercadopago.SDK("APP_USR-8125982310395377-072919-ccdf9f63f282e5f0367f3da6ff93c83b-3577889586")
+        sdk = mercadopago.SDK("APP_USR-1689026143657988-072919-e2bdce9cb1761b0cf1a4298c53034a33-188311197")
         
         preference_data = {
             "items": [
                 {
-                    "title": "Petição Indenização Voo",
+                    "title": "Petição Indenização Voo (Teste)",
                     "quantity": 1,
-                    "unit_price": 56.90
+                    "unit_price": 1.00
                 }
             ],
             "back_urls": {
@@ -638,7 +638,7 @@ elif st.session_state.etapa == 4:
         link_pagamento = resposta["response"]["init_point"]
         
         st.link_button(
-            "Liberar Minha Petição Agora - R$ 56,90", 
+            "Liberar Minha Petição Agora - R$ 1,00", 
             link_pagamento, 
             type="primary", 
             use_container_width=True
