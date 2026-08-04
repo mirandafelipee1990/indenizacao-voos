@@ -28,7 +28,7 @@ if "collection_status" in query_params and query_params["collection_status"] == 
     st.session_state.pagamento_aprovado = True
     st.session_state.etapa = 4
 
-# --- CAPTURA DE DADOS VIA E-MAIL ---
+# --- CAPTURA DE DADOS VIA E-MAIL (RECUPERAÇÃO) ---
 for chave in ["nome", "email", "cpf", "uf"]:
     if chave in query_params and chave not in st.session_state:
         st.session_state[chave] = query_params[chave]
@@ -292,7 +292,7 @@ def mostrar_privacidade():
     ### 2. Armazenamento e Segurança
     Os dados informados são processados em memória de sessão e não são comercializados ou compartilhados com terceiros para fins publicitários.
     ### 3. Conformidade
-    Tratamento de dados alinhado aos princípios da LGPD (Lei nº 13.709/2018).
+    Tratamento de dados alinhado aos princípios da Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
     """)
     if st.button("Fechar", use_container_width=True):
         st.rerun()
@@ -537,7 +537,7 @@ elif st.session_state.etapa == 2:
                 st.session_state.endereco = endereco
                 st.session_state.cpf = re.sub(r'\D', '', cpf_input)
                 
-                # --- INTEGRAÇÃO COM MAKE.COM ---
+                # --- INTEGRAÇÃO COM MAKE.COM (Webhook Inicial) ---
                 webhook_url = "https://hook.us2.make.com/ypgqbrgk8l9hgevkzvo1pphjiyefwmsf"
                 payload = {
                     "nome": nome.strip(),
@@ -555,7 +555,7 @@ elif st.session_state.etapa == 2:
                     requests.post(webhook_url, json=payload, timeout=5)
                 except Exception:
                     pass
-                # -------------------------------
+                # ------------------------------------------------
                 
                 avancar_etapa(3)
 
@@ -613,6 +613,8 @@ elif st.session_state.etapa == 4:
     if 'pagamento_aprovado' not in st.session_state:
         st.session_state.pagamento_aprovado = False
 
+    sdk = mercadopago.SDK("APP_USR-1689026143657988-072919-e2bdce9cb1761b0cf1a4298c53034a33-188311197")
+
     if not st.session_state.pagamento_aprovado:
         st.markdown("""
         <div class="highlight-box">
@@ -621,39 +623,58 @@ elif st.session_state.etapa == 4:
         </div>
         """, unsafe_allow_html=True)
 
-        sdk = mercadopago.SDK("APP_USR-1689026143657988-072919-e2bdce9cb1761b0cf1a4298c53034a33-188311197")
-        
-        preference_data = {
-            "items": [
-                {
-                    "title": "Petição Indenização Voo (Teste)",
-                    "quantity": 1,
-                    "unit_price": 1.00
-                }
-            ],
-            "back_urls": {
-                "success": "https://resolfix.com.br",
-                "failure": "https://resolfix.com.br",
-                "pending": "https://resolfix.com.br"
-            },
-            "auto_return": "approved"
-        }
-        
-        resposta = sdk.preference().create(preference_data)
-        link_pagamento = resposta["response"]["init_point"]
+        # Gera a preferência apenas uma vez e vincula o external_reference para rastreio do PIX
+        if 'id_pedido' not in st.session_state:
+            st.session_state.id_pedido = f"PED-{int(time.time())}-{st.session_state.cpf}"
+            preference_data = {
+                "items": [
+                    {
+                        "title": "Petição Indenização Voo (Teste)",
+                        "quantity": 1,
+                        "unit_price": 1.00
+                    }
+                ],
+                "back_urls": {
+                    "success": "https://resolfix.com.br",
+                    "failure": "https://resolfix.com.br",
+                    "pending": "https://resolfix.com.br"
+                },
+                "auto_return": "approved",
+                "external_reference": st.session_state.id_pedido
+            }
+            
+            resposta = sdk.preference().create(preference_data)
+            st.session_state.link_pagamento = resposta["response"]["init_point"]
         
         st.link_button(
-            "Liberar Minha Petição Agora - R$ 1,00", 
-            link_pagamento, 
+            "Pagar com PIX ou Cartão (Liberar Petição)", 
+            st.session_state.link_pagamento, 
             type="primary", 
             use_container_width=True
         )
 
         st.markdown("---")
-        st.write("🔧 **Ambiente de Teste:**")
-        if st.button("⚡ Simular Pagamento Aprovado (Bypass de Teste)"):
-            st.session_state.pagamento_aprovado = True
-            st.rerun()
+        st.info("🔄 **Aguardando confirmação do pagamento...** Assim que o PIX ou cartão for compensado, esta página atualizará automaticamente.")
+
+        col_btest1, col_btest2 = st.columns(2)
+        with col_btest1:
+            if st.button("⚡ Simular Pagamento Aprovado (Bypass de Teste)"):
+                st.session_state.pagamento_aprovado = True
+                st.rerun()
+
+        # --- POLLING AUTOMÁTICO PARA RECONHECER O PIX SEM RECARREGAR ---
+        try:
+            busca = sdk.payment().search({"external_reference": st.session_state.id_pedido})
+            pagamentos = busca.get("response", {}).get("results", [])
+            if any(p.get("status") == "approved" for p in pagamentos):
+                st.session_state.pagamento_aprovado = True
+                st.rerun()
+        except Exception:
+            pass
+
+        time.sleep(5)
+        st.rerun()
+        # -------------------------------------------------------------
 
     else:
         st.success("🎉 Pagamento Confirmado com Sucesso!")
@@ -674,6 +695,26 @@ elif st.session_state.etapa == 4:
             st.session_state.problema,
             st.session_state.get('conexoes_info', '')
         )
+
+        # --- DISPARO AUTOMÁTICO DO PDF POR E-MAIL (MAKE.COM WEBHOOK) ---
+        if 'email_enviado' not in st.session_state:
+            # COLE AQUI A URL DO SEU NOVO WEBHOOK DO MAKE.COM PARA ENVIO DE E-MAIL
+            webhook_email_url = "COLOQUE_AQUI_A_URL_DO_SEU_WEBHOOK_MAKE_DE_EMAIL"
+            
+            files = {'arquivo': (f"peticao_atraso_voo_{st.session_state.pnr}.pdf", pdf_bytes, 'application/pdf')}
+            data = {
+                'email': st.session_state.email, 
+                'nome': st.session_state.nome,
+                'pnr': st.session_state.pnr
+            }
+            
+            try:
+                requests.post(webhook_email_url, files=files, data=data, timeout=10)
+            except Exception:
+                pass
+                
+            st.session_state.email_enviado = True
+        # -------------------------------------------------------------
 
         st.download_button(
             label="📥 Baixar Minha Petição Oficial (PDF)",
