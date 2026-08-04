@@ -665,7 +665,6 @@ elif st.session_state.etapa == 4:
     if 'pagamento_aprovado' not in st.session_state:
         st.session_state.pagamento_aprovado = False
 
-    # Verificação contínua no Supabase caso o banco seja atualizado por webhook externo ou pelo próprio componente
     if supabase and 'id_pedido' in st.session_state:
         try:
             res = supabase.table("pedidos").select("status").eq("id", st.session_state.id_pedido).execute()
@@ -684,7 +683,7 @@ elif st.session_state.etapa == 4:
         </div>
         """, unsafe_allow_html=True)
 
-        if 'preference_id' not in st.session_state:
+        if 'link_pagamento' not in st.session_state:
             if 'id_pedido' not in st.session_state:
                 st.session_state.id_pedido = f"PED-{int(time.time())}-{st.session_state.cpf}"
                 
@@ -706,38 +705,12 @@ elif st.session_state.etapa == 4:
             }
             
             resposta = sdk.preference().create(preference_data)
-            st.session_state.preference_id = resposta["response"]["id"]
+            st.session_state.link_pagamento = resposta["response"]["init_point"]
         
-        # --- MERCADO PAGO WALLET / PAYMENT BRICK EMBUTIDO NA MESMA PÁGINA ---
-        public_key = "APP_USR-9a915998-17a4-4a57-b080-60b6911c7fb8"  # Substitua pela sua Public Key do Mercado Pago se necessário
-        
-        mp_checkout_html = f"""
-        <div id="wallet_container"></div>
-        <script src="https://sdk.mercadopago.com/js/v2"></script>
-        <script>
-          const mp = new MercadoPago('{public_key}', {{
-            locale: 'pt-BR'
-          }});
-          const bricksBuilder = mp.bricks();
-          
-          async function renderWalletBrick(bricksBuilder) {{
-            await bricksBuilder.create('wallet', 'wallet_container', {{
-              initialization: {{
-                preferenceId: '{st.session_state.preference_id}',
-              }},
-              customization: {{
-                texts: {{
-                  action: 'pay',
-                  valueProp: 'security_safety',
-                }},
-              }},
-            }});
-          }}
-          renderWalletBrick(bricksBuilder);
-        </script>
-        """
-        
-        components.html(mp_checkout_html, height=420)
+        # --- CHECKOUT EMBUTIDO VIA IFRAME (SEGURO E FUNCIONAL) ---
+        components.html(f"""
+            <iframe src="{st.session_state.link_pagamento}" width="100%" height="520px" style="border:none; border-radius:12px; background:#fff;"></iframe>
+        """, height=540)
 
         st.markdown("---")
         st.info("🔄 **Aguardando confirmação do pagamento...** Assim que o pagamento for concluído com sucesso, esta página atualizará automaticamente para a tela de agradecimento.")
@@ -753,10 +726,8 @@ elif st.session_state.etapa == 4:
                 st.session_state.pagamento_aprovado = True
                 st.rerun()
 
-        # --- POLLING AUTOMÁTICO PARA RECONHECER O PAGAMENTO NO SUPABASE ---
         time.sleep(4)
         st.rerun()
-        # -------------------------------------------------------------
 
     else:
         st.success("🎉 Pagamento Confirmado com Sucesso!")
@@ -778,12 +749,9 @@ elif st.session_state.etapa == 4:
             st.session_state.get('conexoes_info', '')
         )
 
-        # --- DISPARO AUTOMÁTICO DO PDF POR E-MAIL (MAKE.COM WEBHOOK) ---
         if 'email_enviado' not in st.session_state:
             webhook_email_url = "https://hook.us2.make.com/3jhvmkkpyfyhpallgj27r95gb4nka1o2"
-            
             link_do_tribunal = LINKS_TJ.get(st.session_state.uf, "https://www.tjsp.jus.br")
-            
             files = {'arquivo': (f"peticao_atraso_voo_{st.session_state.pnr}.pdf", pdf_bytes, 'application/pdf')}
             data = {
                 'email': st.session_state.email, 
@@ -792,14 +760,11 @@ elif st.session_state.etapa == 4:
                 'uf': st.session_state.uf,
                 'link_tj': link_do_tribunal
             }
-            
             try:
                 requests.post(webhook_email_url, files=files, data=data, timeout=10)
             except Exception:
                 pass
-                
             st.session_state.email_enviado = True
-        # -------------------------------------------------------------
 
         st.download_button(
             label="📥 Baixar Minha Petição Oficial (PDF)",
