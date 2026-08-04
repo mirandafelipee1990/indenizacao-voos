@@ -8,6 +8,7 @@ import requests
 from datetime import date
 from fpdf import FPDF
 from supabase import create_client, Client
+import streamlit.components.v1 as components
 
 # --- CONFIGURAÇÃO SUPABASE ---
 SUPABASE_URL = "https://vratkswxzhwnjkwltjyi.supabase.co"
@@ -575,6 +576,7 @@ elif st.session_state.etapa == 2:
                 
                 dados_db = {
                     "id": st.session_state.id_pedido,
+                    "status": "pending",
                     "nome": st.session_state.nome,
                     "email": st.session_state.email,
                     "cpf": st.session_state.cpf,
@@ -663,6 +665,15 @@ elif st.session_state.etapa == 4:
     if 'pagamento_aprovado' not in st.session_state:
         st.session_state.pagamento_aprovado = False
 
+    # Verificação contínua no Supabase caso o banco seja atualizado por webhook externo ou pelo próprio componente
+    if supabase and 'id_pedido' in st.session_state:
+        try:
+            res = supabase.table("pedidos").select("status").eq("id", st.session_state.id_pedido).execute()
+            if res.data and res.data[0].get("status") == "approved":
+                st.session_state.pagamento_aprovado = True
+        except Exception:
+            pass
+
     sdk = mercadopago.SDK("APP_USR-1689026143657988-072919-e2bdce9cb1761b0cf1a4298c53034a33-188311197")
 
     if not st.session_state.pagamento_aprovado:
@@ -673,7 +684,7 @@ elif st.session_state.etapa == 4:
         </div>
         """, unsafe_allow_html=True)
 
-        if 'link_pagamento' not in st.session_state:
+        if 'preference_id' not in st.session_state:
             if 'id_pedido' not in st.session_state:
                 st.session_state.id_pedido = f"PED-{int(time.time())}-{st.session_state.cpf}"
                 
@@ -695,35 +706,55 @@ elif st.session_state.etapa == 4:
             }
             
             resposta = sdk.preference().create(preference_data)
-            st.session_state.link_pagamento = resposta["response"]["init_point"]
+            st.session_state.preference_id = resposta["response"]["id"]
         
-        st.link_button(
-            "Pagar com PIX ou Cartão (Liberar Petição)", 
-            st.session_state.link_pagamento, 
-            type="primary", 
-            use_container_width=True
-        )
+        # --- MERCADO PAGO WALLET / PAYMENT BRICK EMBUTIDO NA MESMA PÁGINA ---
+        public_key = "APP_USR-9a915998-17a4-4a57-b080-60b6911c7fb8"  # Substitua pela sua Public Key do Mercado Pago se necessário
+        
+        mp_checkout_html = f"""
+        <div id="wallet_container"></div>
+        <script src="https://sdk.mercadopago.com/js/v2"></script>
+        <script>
+          const mp = new MercadoPago('{public_key}', {{
+            locale: 'pt-BR'
+          }});
+          const bricksBuilder = mp.bricks();
+          
+          async function renderWalletBrick(bricksBuilder) {{
+            await bricksBuilder.create('wallet', 'wallet_container', {{
+              initialization: {{
+                preferenceId: '{st.session_state.preference_id}',
+              }},
+              customization: {{
+                texts: {{
+                  action: 'pay',
+                  valueProp: 'security_safety',
+                }},
+              }},
+            }});
+          }}
+          renderWalletBrick(bricksBuilder);
+        </script>
+        """
+        
+        components.html(mp_checkout_html, height=420)
 
         st.markdown("---")
-        st.info("🔄 **Aguardando confirmação do pagamento...** Assim que o PIX ou cartão for compensado, esta página atualizará automaticamente.")
+        st.info("🔄 **Aguardando confirmação do pagamento...** Assim que o pagamento for concluído com sucesso, esta página atualizará automaticamente para a tela de agradecimento.")
 
         col_btest1, col_btest2 = st.columns(2)
         with col_btest1:
             if st.button("⚡ Simular Pagamento Aprovado (Bypass de Teste)"):
+                if supabase and 'id_pedido' in st.session_state:
+                    try:
+                        supabase.table("pedidos").update({"status": "approved"}).eq("id", st.session_state.id_pedido).execute()
+                    except Exception:
+                        pass
                 st.session_state.pagamento_aprovado = True
                 st.rerun()
 
-        # --- POLLING AUTOMÁTICO PARA RECONHECER O PIX SEM RECARREGAR ---
-        try:
-            busca = sdk.payment().search({"external_reference": st.session_state.id_pedido})
-            pagamentos = busca.get("response", {}).get("results", [])
-            if any(p.get("status") == "approved" for p in pagamentos):
-                st.session_state.pagamento_aprovado = True
-                st.rerun()
-        except Exception:
-            pass
-
-        time.sleep(5)
+        # --- POLLING AUTOMÁTICO PARA RECONHECER O PAGAMENTO NO SUPABASE ---
+        time.sleep(4)
         st.rerun()
         # -------------------------------------------------------------
 
