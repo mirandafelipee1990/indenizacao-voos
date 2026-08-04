@@ -28,6 +28,11 @@ if "collection_status" in query_params and query_params["collection_status"] == 
     st.session_state.pagamento_aprovado = True
     st.session_state.etapa = 4
 
+# --- CAPTURA DE DADOS VIA E-MAIL ---
+for chave in ["nome", "email", "cpf", "uf"]:
+    if chave in query_params and chave not in st.session_state:
+        st.session_state[chave] = query_params[chave]
+
 st.markdown('<div id="topo"></div>', unsafe_allow_html=True)
 
 st.markdown("""
@@ -287,7 +292,7 @@ def mostrar_privacidade():
     ### 2. Armazenamento e Segurança
     Os dados informados são processados em memória de sessão e não são comercializados ou compartilhados com terceiros para fins publicitários.
     ### 3. Conformidade
-    Tratamento de dados alinhado aos princípios da Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+    Tratamento de dados alinhado aos princípios da LGPD (Lei nº 13.709/2018).
     """)
     if st.button("Fechar", use_container_width=True):
         st.rerun()
