@@ -7,6 +7,15 @@ import os
 import requests
 from datetime import date
 from fpdf import FPDF
+from supabase import create_client, Client
+
+# --- CONFIGURAÇÃO SUPABASE ---
+SUPABASE_URL = "https://vratkswxzhwnjkwltjyi.supabase.co"
+SUPABASE_KEY = "sb_publishable_6q7iqojRH_zOWGJv83Xstg_CSTAEdIq"
+try:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+except:
+    supabase = None
 
 try:
     locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
@@ -22,13 +31,35 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- CAPTURA DE RETORNO DO MERCADO PAGO ---
+def carregar_dados_supabase(id_pedido):
+    if supabase:
+        resposta = supabase.table("pedidos").select("*").eq("id", id_pedido).execute()
+        if len(resposta.data) > 0:
+            dados = resposta.data[0]
+            for chave, valor in dados.items():
+                if chave != "id":
+                    st.session_state[chave] = valor
+            st.session_state.id_pedido = id_pedido
+            return True
+    return False
+
+# --- CAPTURA DA URL (RECUPERAÇÃO DE CARRINHO OU RETORNO DO MP) ---
 query_params = st.query_params
-if query_params.get("status") == "sucesso":
+
+if "recuperar" in query_params:
+    sucesso = carregar_dados_supabase(query_params["recuperar"])
+    if sucesso:
+        st.session_state.etapa = 4
+        st.session_state.pagamento_aprovado = False
+
+elif query_params.get("status") == "approved" or query_params.get("collection_status") == "approved" or query_params.get("status") == "sucesso":
+    ref_id = query_params.get("external_reference")
+    if ref_id:
+        carregar_dados_supabase(ref_id)
     st.session_state.etapa = 4
     st.session_state.pagamento_aprovado = True
 
-# --- CAPTURA DE DADOS VIA E-MAIL (RECUPERAÇÃO) ---
+# --- CAPTURA DE DADOS VIA E-MAIL (RECUPERAÇÃO ANTIGA) ---
 for chave in ["nome", "email", "cpf", "uf"]:
     if chave in query_params and chave not in st.session_state:
         st.session_state[chave] = query_params[chave]
@@ -491,6 +522,7 @@ elif st.session_state.etapa == 2:
         if st.button("Continuar para Pré-visualização ➡️", type="primary", use_container_width=True):
             origem_valida = origem.strip() if origem_sel == "Outro / Não listado" else origem
             destino_valida = destino.strip() if destino_sel == "Outro / Não listado" else destino
+            cpf_limpo = re.sub(r'\D', '', cpf_input)
 
             if not origem_sel:
                 st.error("Por favor, selecione o aeroporto de origem.")
@@ -512,7 +544,7 @@ elif st.session_state.etapa == 2:
                 st.error("Por favor, selecione o Estado (UF) para protocolo.")
             elif not endereco:
                 st.error("Por favor, preencha o seu endereço completo.")
-            elif len(re.sub(r'\D', '', cpf_input)) != 11:
+            elif len(cpf_limpo) != 11:
                 st.error("Por favor, insira um CPF válido com 11 dígitos numéricos.")
             else:
                 st.session_state.origem_sel = origem_sel
@@ -535,24 +567,42 @@ elif st.session_state.etapa == 2:
                 st.session_state.email = email.strip()
                 st.session_state.uf = uf
                 st.session_state.endereco = endereco
-                st.session_state.cpf = re.sub(r'\D', '', cpf_input)
+                st.session_state.cpf = cpf_limpo
+                
+                # --- GERAÇÃO DE ID E SALVAMENTO NO SUPABASE ---
+                if 'id_pedido' not in st.session_state:
+                    st.session_state.id_pedido = f"PED-{int(time.time())}-{cpf_limpo}"
+                
+                dados_db = {
+                    "id": st.session_state.id_pedido,
+                    "nome": st.session_state.nome,
+                    "email": st.session_state.email,
+                    "cpf": st.session_state.cpf,
+                    "uf": st.session_state.uf,
+                    "endereco": st.session_state.endereco,
+                    "problema": st.session_state.problema,
+                    "cia_simples": st.session_state.cia_simples,
+                    "cia_completa": st.session_state.cia_completa,
+                    "origem": st.session_state.origem,
+                    "destino": st.session_state.destino,
+                    "trecho": st.session_state.trecho,
+                    "tipo_voo": st.session_state.tipo_voo,
+                    "data_voo_br": st.session_state.data_voo_br,
+                    "conexoes_info": st.session_state.conexoes_info,
+                    "pnr": st.session_state.pnr,
+                    "num_voo": st.session_state.num_voo
+                }
+
+                if supabase:
+                    try:
+                        supabase.table("pedidos").upsert(dados_db).execute()
+                    except Exception:
+                        pass
                 
                 # --- INTEGRAÇÃO COM MAKE.COM (Webhook Inicial) ---
                 webhook_url = "https://hook.us2.make.com/ypgqbrgk8l9hgevkzvo1pphjiyefwmsf"
-                payload = {
-                    "nome": nome.strip(),
-                    "email": email.strip(),
-                    "cpf": re.sub(r'\D', '', cpf_input),
-                    "uf": uf,
-                    "problema": st.session_state.problema,
-                    "companhia": st.session_state.cia_simples,
-                    "companhia_completa": st.session_state.cia_completa,
-                    "trecho": f"{origem_valida} até {destino_valida}",
-                    "pnr": pnr
-                }
-                
                 try:
-                    requests.post(webhook_url, json=payload, timeout=5)
+                    requests.post(webhook_url, json=dados_db, timeout=5)
                 except Exception:
                     pass
                 # ------------------------------------------------
@@ -623,8 +673,10 @@ elif st.session_state.etapa == 4:
         </div>
         """, unsafe_allow_html=True)
 
-        if 'id_pedido' not in st.session_state:
-            st.session_state.id_pedido = f"PED-{int(time.time())}-{st.session_state.cpf}"
+        if 'link_pagamento' not in st.session_state:
+            if 'id_pedido' not in st.session_state:
+                st.session_state.id_pedido = f"PED-{int(time.time())}-{st.session_state.cpf}"
+                
             preference_data = {
                 "items": [
                     {
@@ -634,9 +686,9 @@ elif st.session_state.etapa == 4:
                     }
                 ],
                 "back_urls": {
-                    "success": "https://resolfix.com.br/?status=sucesso",
-                    "failure": "https://resolfix.com.br/?status=erro",
-                    "pending": "https://resolfix.com.br/?status=pendente"
+                    "success": "https://resolfix.com.br",
+                    "failure": "https://resolfix.com.br",
+                    "pending": "https://resolfix.com.br"
                 },
                 "auto_return": "approved",
                 "external_reference": st.session_state.id_pedido
