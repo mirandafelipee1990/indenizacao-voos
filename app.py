@@ -80,7 +80,7 @@ def carregar_dados_supabase(id_pedido):
 # --- CAPTURA DA URL (RECUPERAÇÃO DE CARRINHO OU RETORNO DO MP) ---
 query_params = st.query_params
 
-ref_id = query_params.get("external_reference") or query_params.get("recuperar")
+ref_id = query_params.get("external_reference") or query_params.get("recuperar") or query_params.get("pedido")
 
 if ref_id:
     sucesso = carregar_dados_supabase(ref_id)
