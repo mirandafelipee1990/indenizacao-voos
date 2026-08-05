@@ -680,7 +680,7 @@ elif st.session_state.etapa == 4:
                     {
                         "title": "Petição Indenização Voo",
                         "quantity": 1,
-                        "unit_price": 56.90
+                        "unit_price": 97.00
                     }
                 ],
                 "back_urls": {
