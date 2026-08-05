@@ -692,7 +692,7 @@ elif st.session_state.etapa == 4:
                     {
                         "title": "Petição Indenização Voo",
                         "quantity": 1,
-                        "unit_price": 1.00
+                        "unit_price": 56.90
                     }
                 ],
                 "back_urls": {
@@ -846,3 +846,4 @@ with col_footer2:
         mostrar_privacidade()
 with col_footer3:
     st.markdown("<p style='text-align: center; color: gray; font-size: 12px;'>© 2026 Resolfix - Indenização de Voos</p>", unsafe_allow_html=True)
+```[cite: 2]
