@@ -27,6 +27,7 @@ except:
 
 st.set_page_config(
     page_title="Resolfix - Notificação Extrajudicial de Voo",
+    page_icon="⚖️",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
