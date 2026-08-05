@@ -53,10 +53,19 @@ if ref_id:
     if sucesso:
         st.session_state.etapa = 4
         status_param = query_params.get("status") or query_params.get("collection_status")
-        if status_param == "approved" or status_param == "sucesso":
+        
+        # 1. Verifica se a URL diz aprovado OU se o banco já gravou como 'processed'
+        if status_param in ["approved", "sucesso"] or st.session_state.get("status") == "processed":
             st.session_state.pagamento_aprovado = True
         else:
-            st.session_state.pagamento_aprovado = False
+            # 2. Se a URL diz 'pending', faz uma checagem real na API do MP para evitar o falso negativo
+            try:
+                sdk_temp = mercadopago.SDK("APP_USR-1689026143657988-072919-e2bdce9cb1761b0cf1a4298c53034a33-188311197")
+                busca = sdk_temp.payment().search({"external_reference": ref_id})
+                pagamentos = busca.get("response", {}).get("results", [])
+                st.session_state.pagamento_aprovado = any(p.get("status") == "approved" for p in pagamentos)
+            except:
+                st.session_state.pagamento_aprovado = False
 
 # --- CAPTURA DE DADOS VIA E-MAIL (RECUPERAÇÃO ANTIGA) ---
 for chave in ["nome", "email", "cpf", "uf"]:
