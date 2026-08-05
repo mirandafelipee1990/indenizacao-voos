@@ -32,6 +32,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- GOOGLE TAG (GTAG.JS) ---
+st.markdown("""
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18371707969"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18371707969');
+</script>
+""", unsafe_allow_html=True)
+
 def carregar_dados_supabase(id_pedido):
     if supabase:
         resposta = supabase.table("pedidos").select("*").eq("id", id_pedido).execute()
@@ -717,12 +730,6 @@ elif st.session_state.etapa == 4:
         st.markdown("---")
         st.info("🔄 **Aguardando confirmação do pagamento...** Assim que o PIX ou cartão for compensado, esta página atualizará automaticamente.")
 
-        col_btest1, col_btest2 = st.columns(2)
-        with col_btest1:
-            if st.button("⚡ Simular Pagamento Aprovado (Bypass de Teste)"):
-                st.session_state.pagamento_aprovado = True
-                st.rerun()
-
         # --- POLLING AUTOMÁTICO PARA RECONHECER O PIX SEM RECARREGAR ---
         try:
             busca = sdk.payment().search({"external_reference": st.session_state.id_pedido})
@@ -846,4 +853,3 @@ with col_footer2:
         mostrar_privacidade()
 with col_footer3:
     st.markdown("<p style='text-align: center; color: gray; font-size: 12px;'>© 2026 Resolfix - Indenização de Voos</p>", unsafe_allow_html=True)
-```[cite: 2]
