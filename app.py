@@ -350,12 +350,11 @@ def mostrar_privacidade():
 
 if 'etapa' not in st.session_state:
     st.session_state.etapa = 1
-if 'target_etapa' not in st.session_state:
-    st.session_state.target_etapa = 1
 
 def avancar_etapa(destino):
-    st.session_state.target_etapa = destino
-    st.session_state.etapa = "loading"
+    with st.spinner("Processando dados... Analisando parâmetros regulatórios e estruturando documento jurídico."):
+        time.sleep(0.8)
+    st.session_state.etapa = destino
     st.rerun()
 
 def voltar_etapa(destino):
@@ -369,29 +368,7 @@ def aviso_pendencia():
     if st.button("Voltar e Preencher (Recomendado)", type="primary", use_container_width=True):
         voltar_etapa(2)
 
-if st.session_state.etapa == "loading":
-    st.markdown("""
-        <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: sans-serif;">
-            <div style="background: white; color: #1e293b; padding: 35px 45px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); text-align: center; max-width: 400px; width: 90%;">
-                <div style="border: 4px solid #f3f3f3; border-top: 4px solid #16a34a; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 0 auto 20px auto;"></div>
-                <h3 style="margin: 0 0 10px 0; font-size: 19px; font-weight: 700; color: #1e293b;">Processando dados...</h3>
-                <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.4;">Analisando parâmetros regulatórios e estruturando documento jurídico.</p>
-            </div>
-        </div>
-        <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    time.sleep(1.0)
-    st.session_state.etapa = st.session_state.target_etapa
-    st.markdown("<script>window.parent.scrollTo({ top: 0, behavior: 'instant' });</script>", unsafe_allow_html=True)
-    st.rerun()
-
-elif st.session_state.etapa == 1:
+if st.session_state.etapa == 1:
     st.markdown("""
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 35px; border-radius: 16px; color: white; margin-bottom: 20px;">
             <span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 20px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px;">
