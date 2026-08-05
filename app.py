@@ -45,6 +45,17 @@ st.markdown("""
 </script>
 """, unsafe_allow_html=True)
 
+# --- MICROSOFT CLARITY ---
+st.markdown("""
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xxo41cge06");
+</script>
+""", unsafe_allow_html=True)
+
 def carregar_dados_supabase(id_pedido):
     if supabase:
         resposta = supabase.table("pedidos").select("*").eq("id", id_pedido).execute()
